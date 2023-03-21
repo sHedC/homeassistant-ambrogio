@@ -4,4 +4,10 @@ set -e
 
 cd "$(dirname "$0")/.."
 
+pip install --upgrade pip
+
+if [ ! -f ./configuration.yaml ]; then
+  cp ./configuration-template.yaml ./configuration.yaml
+fi
+
 python3 -m pip install --requirement requirements.txt

@@ -1,4 +1,4 @@
-"""Switch platform for integration_blueprint."""
+"""Switch platform for ambrogio."""
 from __future__ import annotations
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
@@ -9,8 +9,8 @@ from .entity import IntegrationBlueprintEntity
 
 ENTITY_DESCRIPTIONS = (
     SwitchEntityDescription(
-        key="integration_blueprint",
-        name="Integration Switch",
+        key="ambrogio",
+        name="Ambrogio Switch",
         icon="mdi:format-quote-close",
     ),
 )
@@ -29,7 +29,7 @@ async def async_setup_entry(hass, entry, async_add_devices):
 
 
 class IntegrationBlueprintSwitch(IntegrationBlueprintEntity, SwitchEntity):
-    """integration_blueprint switch class."""
+    """ambrogio switch class."""
 
     def __init__(
         self,
