@@ -1,3 +1,7 @@
+/*
+  Copy this file to .devcontainer.json
+  if using PODMAN, instead of DOCKER, uncomment the runArgs section
+*/
 {
     "name": "ludeeus/integration_blueprint",
     "image": "mcr.microsoft.com/vscode/devcontainers/python:0-3.10-bullseye",
@@ -11,7 +15,9 @@
                 "ms-python.python",
                 "github.vscode-pull-request-github",
                 "ryanluker.vscode-coverage-gutters",
-                "ms-python.vscode-pylance"
+                "ms-python.vscode-pylance",
+                "mikestead.dotenv",
+                "github.vscode-pull-request-github"
             ],
             "settings": {
                 "files.eol": "\n",
@@ -30,7 +36,9 @@
         }
     },
     "remoteUser": "vscode",
-    "features": {
-        "rust": "latest"
-    }
+    "containerUser": "vscode",
+    //"runArgs": [
+    //    "--userns=keep-id"
+    //],
+    "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/${localWorkspaceFolderBasename},type=bind,Z"
 }
