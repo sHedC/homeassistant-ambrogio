@@ -3,7 +3,7 @@
   if using PODMAN, instead of DOCKER, uncomment the runArgs section
 */
 {
-    "name": "ludeeus/integration_blueprint",
+    "name": "sHedC/homeassistant-ambrogio",
     "image": "mcr.microsoft.com/vscode/devcontainers/python:0-3.10-bullseye",
     "postCreateCommand": "scripts/setup",
     "forwardPorts": [
