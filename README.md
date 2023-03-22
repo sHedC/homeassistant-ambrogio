@@ -20,6 +20,8 @@ Latest -
 
 _Integration to integrate with [Ambrogio Robot Mowers][ambrogio]._
 
+> :warning: **In Development:** This integration is not ready yet it does nothing other than install.
+
 **This integration will set up the following platforms.**
 
 Platform | Description
