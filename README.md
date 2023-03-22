@@ -16,6 +16,7 @@ Stable -
 Latest -
 [![GitHub Release][latest-release-shield]][releases]
 [![validate-badge]][validate-workflow]
+[![lint-badge]][lint-workflow]
 [![issues][issues-shield]][issues-link]
 
 _Integration to integrate with [Ambrogio Robot Mowers][ambrogio]._
@@ -95,6 +96,8 @@ Or just raise a feature request, would be useful to have a use-case, what system
 [stable-release-shield]: https://img.shields.io/github/v/release/shedc/homeassistant-ambrogio?style=flat
 [latest-release-shield]: https://img.shields.io/github/v/release/shedc/homeassistant-ambrogio?include_prereleases&style=flat
 
+[lint-badge]: https://github.com/sHedC/homeassistant-ambrogio/actions/workflows/lint.yml/badge.svg
+[lint-workflow]: https://github.com/sHedC/homeassistant-ambrogio/actions/workflows/lint.yml
 [validate-badge]: https://github.com/sHedC/homeassistant-ambrogio/actions/workflows/validate.yml/badge.svg
 [validate-workflow]: https://github.com/sHedC/homeassistant-ambrogio/actions/workflows/validate.yml
 [release-badge]: https://github.com/sHedC/homeassistant-ambrogio/actions/workflows/release.yml/badge.svg
