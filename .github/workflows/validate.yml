@@ -55,7 +55,7 @@ jobs:
             --timeout=9 \
             --durations=10 \
             -n auto \
-            --cov custom_components.ambrogio_remote \
+            --cov custom_components.ambrogio_robot \
             --cov-report=xml \
             -o console_output_style=count \
             -p no:sugar \
