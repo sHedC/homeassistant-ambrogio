@@ -10,12 +10,12 @@
 
 Stable -
 [![GitHub Release][stable-release-shield]][releases]
-[![workflow-release]][workflows-release]
+[![release-badge]][release-workflow]
 [![codecov][codecov-shield]][codecov-link]
 
 Latest -
 [![GitHub Release][latest-release-shield]][releases]
-[![workflow-lastest]][workflows]
+[![validate-badge]][validate-workflow]
 [![issues][issues-shield]][issues-link]
 
 _Integration to integrate with [Ambrogio Robot Mowers][ambrogio]._
@@ -95,7 +95,7 @@ Or just raise a feature request, would be useful to have a use-case, what system
 [stable-release-shield]: https://img.shields.io/github/v/release/shedc/homeassistant-ambrogio?style=flat
 [latest-release-shield]: https://img.shields.io/github/v/release/shedc/homeassistant-ambrogio?include_prereleases&style=flat
 
-[workflows]: https://github.com/sHedC/homeassistant-ambrogio/actions/workflows/validate.yml/badge.svg
-[workflow-lastest]: https://github.com/sHedC/homeassistant-ambrogio/actions/workflows/validate.yml/badge.svg
-[workflows-release]: https://github.com/sHedC/homeassistant-ambrogio/actions/workflows/release.yml/badge.svg
-[workflow-release]: https://github.com/sHedC/homeassistant-ambrogio/actions/workflows/release.yml/badge.svg
+[validate-badge]: https://github.com/sHedC/homeassistant-ambrogio/actions/workflows/validate.yml/badge.svg
+[validate-workflow]: https://github.com/sHedC/homeassistant-ambrogio/actions/workflows/validate.yml
+[release-badge]: https://github.com/sHedC/homeassistant-ambrogio/actions/workflows/release.yml/badge.svg
+[release-workflow]: https://github.com/sHedC/homeassistant-ambrogio/actions/workflows/release.yml
