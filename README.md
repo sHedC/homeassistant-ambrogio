@@ -86,7 +86,7 @@ Or just raise a feature request, would be useful to have a use-case, what system
 [forum-shield]: https://img.shields.io/badge/community-forum-brightgreen.svg?style=for-the-badge
 [forum]: https://community.home-assistant.io/
 
-[codecov-shield]: https://codecov.io/gh/sHedC/homeassistant-ambrogio/branch/main/graph/badge.svg?token=Z7VVO035GY
+[codecov-shield]: https://codecov.io/gh/sHedC/homeassistant-ambrogio/branch/main/graph/badge.svg?token=IANaWFnd5g
 [codecov-link]: https://codecov.io/gh/sHedC/homeassistant-ambrogio
 
 [issues-shield]: https://img.shields.io/github/issues/shedc/homeassistant-ambrogio?style=flat
