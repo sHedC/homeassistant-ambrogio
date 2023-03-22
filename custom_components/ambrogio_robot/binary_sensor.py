@@ -1,4 +1,4 @@
-"""Binary sensor platform for ambrogio."""
+"""Binary sensor platform for Ambrogio Robot."""
 from __future__ import annotations
 
 from homeassistant.components.binary_sensor import (
@@ -13,7 +13,7 @@ from .entity import IntegrationBlueprintEntity
 
 ENTITY_DESCRIPTIONS = (
     BinarySensorEntityDescription(
-        key="ambrogio",
+        key="ambrogio_robot",
         name="Ambrogio Binary Sensor",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
     ),
@@ -33,7 +33,7 @@ async def async_setup_entry(hass, entry, async_add_devices):
 
 
 class IntegrationBlueprintBinarySensor(IntegrationBlueprintEntity, BinarySensorEntity):
-    """ambrogio binary_sensor class."""
+    """Ambrogio Robot binary_sensor class."""
 
     def __init__(
         self,

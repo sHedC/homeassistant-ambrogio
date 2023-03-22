@@ -1,7 +1,7 @@
-"""Custom integration to integrate ambrogio with Home Assistant.
+"""Custom integration to integrate Ambrogio Robot with Home Assistant.
 
 For more details about this integration, please refer to
-https://github.com/sHedC/ambrogio
+https://github.com/sHedC/homeassistant-ambrogio
 """
 from __future__ import annotations
 

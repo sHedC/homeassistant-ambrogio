@@ -5,4 +5,4 @@ default_config:
 logger:
   default: warning
   logs:
-    custom_components.ambrogio: debug
+    custom_components.ambrogio_robot: debug

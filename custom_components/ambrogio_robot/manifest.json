@@ -1,0 +1,12 @@
+{
+  "domain": "ambrogio_robot",
+  "name": "Ambrogio Robot",
+  "codeowners": [
+    "@sHedC"
+  ],
+  "config_flow": true,
+  "documentation": "https://github.com/sHedC/homeassistant-ambrogio",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/sHedC/homeassistant-ambrogio/issues",
+  "version": "0.0.0"
+}

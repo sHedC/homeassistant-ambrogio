@@ -34,10 +34,10 @@ Platform | Description
 
 The preferred and easiest way to install this is from the Home Assistant Community Store (HACS).  Follow the link in the badge above for details on HACS.
 
-Go to HACS and integraitons, then select to download Ambrogio from HACS.
+Go to HACS and integraitons, then select to download Ambrogio Robot from HACS.
 
 #### If Not Available in HACS Yet
-If you do the above and Ambrogio is not there it means its not yet been accepted into the default repository, hopfully this will only be a couple of weeks. In this case:
+If you do the above and Ambrogio Robot is not there it means its not yet been accepted into the default repository, hopfully this will only be a couple of weeks. In this case:
 
 Visit the HACS _Integrations_ pane and add `https://github.com/sHedC/homeassistant-ambrogio.git` as an `Integration` by following [these instructions](https://hacs.xyz/docs/faq/custom_repositories/). You'll then be able to install it through the _Integrations_ pane.
 
@@ -45,15 +45,15 @@ Visit the HACS _Integrations_ pane and add `https://github.com/sHedC/homeassista
 To install manually, if you really want to: I won't support this.
 1. Using the tool of choice open the directory (folder) for your HA configuration (where you find `configuration.yaml`).
 1. If you do not have a `custom_components` directory (folder) there, you need to create it.
-1. In the `custom_components` directory (folder) create a new folder called `ambrogio`.
-1. Download _all_ the files from the `custom_components/ambrogio/` directory (folder) in this repository.
+1. In the `custom_components` directory (folder) create a new folder called `ambrogio_robot`.
+1. Download _all_ the files from the `custom_components/ambrogio_robot/` directory (folder) in this repository.
 1. Place the files you downloaded in the new directory (folder) you created.
 1. Restart Home Assistant
-1. In the HA UI go to "Configuration" -> "Integrations" click "+" and search for "Ambrogio"
+1. In the HA UI go to "Configuration" -> "Integrations" click "+" and search for "Ambrogio Robot"
 
 ## Configuration is done in the UI
 
-Go to the Home Assistant UI, go to "Configuration" -> "Integrations" click "+" and search for "Ambrogio"
+Go to the Home Assistant UI, go to "Configuration" -> "Integrations" click "+" and search for "Ambrogio Robot"
 - Select the correct login version, if not sure try online directly to see which server you use.
 - Once connected you can change the refresh time in the options
 
