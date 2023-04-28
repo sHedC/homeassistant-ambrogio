@@ -1,4 +1,4 @@
-"""Sample API Client."""
+"""Dummy API Client."""
 from __future__ import annotations
 
 import asyncio
@@ -8,50 +8,43 @@ import aiohttp
 import async_timeout
 
 
-class IntegrationBlueprintApiClientError(Exception):
+class AmbrogioRobotApiClientError(Exception):
     """Exception to indicate a general API error."""
 
 
-class IntegrationBlueprintApiClientCommunicationError(
-    IntegrationBlueprintApiClientError
-):
+class AmbrogioRobotApiClientCommunicationError(AmbrogioRobotApiClientError):
     """Exception to indicate a communication error."""
 
 
-class IntegrationBlueprintApiClientAuthenticationError(
-    IntegrationBlueprintApiClientError
-):
+class AmbrogioRobotApiClientAuthenticationError(AmbrogioRobotApiClientError):
     """Exception to indicate an authentication error."""
 
 
-class IntegrationBlueprintApiClient:
+class AmbrogioRobotApiClient:
     """Sample API Client."""
 
     def __init__(
         self,
-        username: str,
-        password: str,
+        api_key: str,
+        access_token: str,
         session: aiohttp.ClientSession,
     ) -> None:
         """Sample API Client."""
-        self._username = username
-        self._password = password
+        self._api_key = api_key
+        self._access_token = access_token
         self._session = session
 
-    async def async_get_data(self) -> any:
-        """Get data from the API."""
-        return await self._api_wrapper(
-            method="get", url="https://jsonplaceholder.typicode.com/posts/1"
-        )
+    async def async_check_api_connect(self) -> bool:
+        """Check the API Connectivity is valid."""
+        return True
 
-    async def async_set_title(self, value: str) -> any:
-        """Get data from the API."""
-        return await self._api_wrapper(
-            method="patch",
-            url="https://jsonplaceholder.typicode.com/posts/1",
-            data={"title": value},
-            headers={"Content-type": "application/json; charset=UTF-8"},
-        )
+    async def async_check_robot(self, robot_imei: str) -> bool:
+        """Check the Robot Exists."""
+        return True
+
+    async def async_get_api_id(self) -> str:
+        """Get the API Token Key from Google APIs."""
+        return "keythatshouldnotbeshared"
 
     async def _api_wrapper(
         self,
@@ -70,21 +63,21 @@ class IntegrationBlueprintApiClient:
                     json=data,
                 )
                 if response.status in (401, 403):
-                    raise IntegrationBlueprintApiClientAuthenticationError(
+                    raise AmbrogioRobotApiClientAuthenticationError(
                         "Invalid credentials",
                     )
                 response.raise_for_status()
                 return await response.json()
 
         except asyncio.TimeoutError as exception:
-            raise IntegrationBlueprintApiClientCommunicationError(
+            raise AmbrogioRobotApiClientCommunicationError(
                 "Timeout error fetching information",
             ) from exception
         except (aiohttp.ClientError, socket.gaierror) as exception:
-            raise IntegrationBlueprintApiClientCommunicationError(
+            raise AmbrogioRobotApiClientCommunicationError(
                 "Error fetching information",
             ) from exception
         except Exception as exception:  # pylint: disable=broad-except
-            raise IntegrationBlueprintApiClientError(
+            raise AmbrogioRobotApiClientError(
                 "Something really wrong happened!"
             ) from exception

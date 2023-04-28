@@ -2,17 +2,71 @@
     "config": {
         "step": {
             "user": {
-                "description": "If you need help with the configuration have a look here: https://github.com/sHedC/homeassistant-ambrogio",
+                "title": "Cloud Service Login",
+                "description": "Garage Name is the collective name for the robots under a single account, Access Token and IMEI can be found in the mobile app. For additional information go to https://github.com/sHedC/homeassistant-ambrogio. More mowers can be added after setup using the device Options.",
                 "data": {
-                    "username": "Username",
-                    "password": "Password"
+                    "name": "Garage Name",
+                    "api_token": "API Token (This is the current known token)",
+                    "access_token": "User Access Token",
+                    "robot_name": "Robot Name, you know you have one",
+                    "robot_imei": "Robots IMEI Number"
                 }
             }
         },
         "error": {
             "auth": "Username/Password is wrong.",
             "connection": "Unable to connect to the server.",
-            "unknown": "Unknown error occurred."
+            "unknown": "Unknown error occurred.",
+            "robot_not_found": "Robot Mower is not found or connected properly."
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "menu_options": {
+                    "add": "Add Robot Mower",
+                    "change": "Change Robot Mower",
+                    "delete": "Remove Robot Mower",
+                    "settings": "Update Settings"
+                }
+            },
+            "settings": {
+                "title": "Settings",
+                "description": "The API Token should not need changing it is hard coded in the Mobile Application.  The User Access Token comes from the Mobile App, see Help for more information.",
+                "data": {
+                    "api_token": "API Token",
+                    "access_token": "User Access Token",
+                    "scan_interval": "Over Air Refresh Rate (hours)"
+                }
+            },
+            "add": {
+                "title": "Add Robot",
+                "description": "Get Robot IMEI from Mobile App, More Info -> Imei Address.",
+                "data": {
+                    "robot_name": "Robot Name",
+                    "robot_imei": "Robot IMEI"
+                }
+            },
+            "change": {
+                "title": "Change Robot",
+                "data": {
+                    "selected_robot": "Select Robot to Change",
+                    "robot_name": "Change Robot Name"
+                }
+            },
+            "delete": {
+                "title": "Delete Robot",
+                "data": {
+                    "selected_robot": "Select Robots to Delete",
+                    "confirm": "Confirm deletion"
+                }
+            }
+        },
+        "error": {
+            "imei_exists": "Robot IMEI already exists in configuration",
+            "name_exists": "Robot Name already exists in configuration",
+            "last_robot": "Can't Delete the last Robot.",
+            "del_not_confirmed": "Deletion of Robot not confirmed."
         }
     }
 }

@@ -4,12 +4,20 @@ set -e
 
 cd "$(dirname "$0")/.."
 
+# Install Bluetooth Requirements
+sudo apt update
+sudo apt -y dist-upgrade
+sudo apt -y install bluez
+
+# Upgrade PIP
 pip install --upgrade pip
 
+# Setup Configuration if missing
 if [ ! -f ./configuration.yaml ]; then
   cp ./configuration-template.yaml ./configuration.yaml
 fi
 
+# Setup Required Python Modules.
 if [ ${BUILD_TYPE} == "dev" ]; then
     python3 -m pip install --requirement requirements_dev.txt
 fi

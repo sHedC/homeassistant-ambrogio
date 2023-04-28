@@ -1,0 +1,11 @@
+{
+    "kind": "identitytoolkit#VerifyPasswordResponse",
+    "localId": "keythatshouldnotbeshared",
+    "email": "someone@email.com",
+    "displayName": "Some One",
+    "idToken": "idtokenforidentitydetailsfromgoogle",
+    "registered": true,
+    "profilePicture": "https://lh3.googleusercontent.com/a-/somephoto",
+    "refreshToken": "refreshtokenprobablydontneed",
+    "expiresIn": "3600"
+}

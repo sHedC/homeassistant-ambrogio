@@ -1,6 +1,6 @@
 /*
   Copy this file to .devcontainer.json
-  if using PODMAN, instead of DOCKER, uncomment the runArgs section
+  See comments for further information.
 
   Change BUILD_TYPE to "dev" to use pytests and develop and "run" to use homeassistant
 */
@@ -42,8 +42,16 @@
     },
     "remoteUser": "vscode",
     "containerUser": "vscode",
+    // Uncomment counts section if using a bluetooth adapter
+    // also uncomment runArgs and priviledges for bluetooth
+    // For PODMAN instead of DOCKER uncomment the runArgs userns
+    // to avoid permission issues.
+    //"mounts": [
+    //    "source=/var/run/dbus/,target=/var/run/dbus/,type=bind"
+    //],
     //"runArgs": [
-    //    "--userns=keep-id"
+    //    "--userns=keep-id",
+    //    "--privileged"
     //],
     "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/${localWorkspaceFolderBasename},type=bind,Z"
 }

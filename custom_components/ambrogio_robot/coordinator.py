@@ -12,26 +12,25 @@ from homeassistant.helpers.update_coordinator import (
 from homeassistant.exceptions import ConfigEntryAuthFailed
 
 from .api import (
-    IntegrationBlueprintApiClient,
-    IntegrationBlueprintApiClientAuthenticationError,
-    IntegrationBlueprintApiClientError,
+    AmbrogioRobotApiClient,
+    AmbrogioRobotApiClientAuthenticationError,
+    AmbrogioRobotApiClientError,
 )
 from .const import DOMAIN, LOGGER
 
 
-# https://developers.home-assistant.io/docs/integration_fetching_data#coordinated-single-api-poll-for-data-for-all-entities
-class BlueprintDataUpdateCoordinator(DataUpdateCoordinator):
+class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching data from the API."""
-
-    config_entry: ConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        client: IntegrationBlueprintApiClient,
+        robots: dict[str, str],
+        client: AmbrogioRobotApiClient,
     ) -> None:
         """Initialize."""
         self.client = client
+        self.robots = robots
         super().__init__(
             hass=hass,
             logger=LOGGER,
@@ -42,8 +41,16 @@ class BlueprintDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self):
         """Update data via library."""
         try:
-            return await self.client.async_get_data()
-        except IntegrationBlueprintApiClientAuthenticationError as exception:
+            robot_data = {"robots": {}}
+            for robot_imei, robot_name in self.robots.items():
+                robot_data["robots"][robot_imei] = {
+                    "name": robot_name,
+                    "imei": robot_imei,
+                    "state": "charging",
+                }
+            return robot_data
+
+        except AmbrogioRobotApiClientAuthenticationError as exception:
             raise ConfigEntryAuthFailed(exception) from exception
-        except IntegrationBlueprintApiClientError as exception:
+        except AmbrogioRobotApiClientError as exception:
             raise UpdateFailed(exception) from exception

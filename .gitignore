@@ -28,3 +28,4 @@ scripts.yaml
 secrets.yaml
 
 .devcontainer.json
+api_notes

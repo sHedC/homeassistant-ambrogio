@@ -1,0 +1,103 @@
+{
+    "thing_find": {
+        "success": true,
+        "params": {
+            "count": 1,
+            "result": [
+                {
+                    "alarms": {
+                        "connection_state": {
+                            "ts": "2022-11-13T16:10:21.893Z",
+                            "since": "2022-11-13T16:10:21.893Z",
+                            "state": 0
+                        },
+                        "robot_state": {
+                            "ts": "2022-11-13T16:05:19.151Z",
+                            "since": "2022-11-13T16:05:19.151Z",
+                            "state": 3,
+                            "lat": 1.373936,
+                            "lng": -1.676285
+                        }
+                    },
+                    "attrs": {
+                        "apn": {
+                            "ts": "2022-11-13T16:05:17.506Z",
+                            "since": "2021-04-25T13:16:58.09Z",
+                            "value": "nxt17.net"
+                        },
+                        "available_functions": {
+                            "ts": "2022-08-28T16:15:08.128Z",
+                            "since": "2021-04-25T13:05:07.734Z",
+                            "value": "255"
+                        },
+                        "config_flags": {
+                            "ts": "2022-08-28T16:15:08.05Z",
+                            "since": "2022-03-24T08:32:09.867Z",
+                            "value": "3279980419"
+                        },
+                        "flags": {
+                            "ts": "2022-08-28T16:15:08.41Z",
+                            "since": "2021-04-25T13:05:07.932Z",
+                            "value": "0"
+                        },
+                        "program_id": {
+                            "ts": "2022-08-28T16:15:07.631Z",
+                            "since": "2021-04-25T13:05:07.153Z",
+                            "value": "141"
+                        },
+                        "program_version": {
+                            "ts": "2022-08-28T16:15:07.786Z",
+                            "since": "2022-03-24T08:32:09.589Z",
+                            "value": "56898"
+                        },
+                        "robot_client1": {
+                            "ts": "2022-08-28T16:09:16.926Z",
+                            "since": "2022-03-24T08:29:40.452Z",
+                            "value": "keythatshouldnotbeshared"
+                        },
+                        "robot_serial": {
+                            "ts": "2022-08-28T10:58:23.191Z",
+                            "since": "2021-04-25T13:05:18.956Z",
+                            "value": "AM212113412313"
+                        }
+                    },
+                    "connected": false,
+                    "createdOn": "2021-04-25T13:05:05.79Z",
+                    "id": "60856901447cfb2d20962f96",
+                    "key": "1234567890",
+                    "lastCommunication": "2022-11-13T16:10:32.042Z",
+                    "lastSeen": "2022-11-13T16:10:32.042Z",
+                    "loc": {
+                        "addr": {
+                            "city": "Henley",
+                            "country": "GB",
+                            "state": "England",
+                            "street": "Squirrel Lane",
+                            "zipCode": "SY8 3HA"
+                        },
+                        "fixType": "network",
+                        "geohash": "gcq1gn7hq133",
+                        "lat": 1.373936,
+                        "lng": -1.676285,
+                        "since": "2022-11-13T16:05:10Z",
+                        "speed": 0
+                    },
+                    "locUpdated": "2022-11-13T16:10:22Z",
+                    "name": "auto:1234567890",
+                    "properties": {
+                        "geofence_location_counter": {
+                            "ts": "2022-08-28T16:26:16.916Z",
+                            "value": 0,
+                            "corrId": "trace"
+                        },
+                        "robot_error": {
+                            "ts": "2022-10-05T05:14:57.479Z",
+                            "value": 49
+                        }
+                    },
+                    "varBillingPlanCode": ""
+                }
+            ]
+        }
+    }
+}
