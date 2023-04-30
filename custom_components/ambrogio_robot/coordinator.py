@@ -16,7 +16,7 @@ from .api import (
     AmbrogioRobotApiClientAuthenticationError,
     AmbrogioRobotApiClientError,
 )
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER, ROBOT_STATES
 
 
 class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
@@ -41,13 +41,55 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self):
         """Update data via library."""
         try:
+            # TODO
+            LOGGER.error("_async_update_data")
+            
             robot_data = {"robots": {}}
+            robot_imeis = []
             for robot_imei, robot_name in self.robots.items():
+                robot_imeis.append(robot_imei)
                 robot_data["robots"][robot_imei] = {
                     "name": robot_name,
                     "imei": robot_imei,
-                    "state": "charging",
+                    "state": "unknown",
                 }
+            
+            result = await self.client.execute("thing.list", {
+                "show": [
+                    "id",
+                    "key",
+                    "name",
+                    "connected",
+                    "lastSeen",
+                    "lastCommunication",
+                    "loc",
+                    "properties",
+                    "alarms",
+                    "attrs",
+                    "createdOn",
+                    "storage",
+                    "varBillingPlanCode"
+                ],
+                "hideFields": True,
+                "keys": robot_imeis
+            })
+            response = await self.client.get_response()
+            if "params" in response:
+                if "result" in response["params"]:
+                    result_list = response["params"]["result"]
+                    for i in range(len(result_list)):
+                        robot = result_list[i]
+                        if "key" in robot and "alarms" in robot:
+                            if "robot_state" in robot["alarms"] and robot["key"] in robot_data["robots"]:
+                                robot_state = robot["alarms"]["robot_state"]
+                                
+                                # robot_state["since"] -> timestamp since state change (format 2023-04-30T10:24:47.517Z)
+                                # robot_state["lat"] -> latitude, not always available
+                                # robot_state["lng"] -> longitude, not always available
+                                
+                                robot_data["robots"][robot["key"]]["state"] = ROBOT_STATES[robot_state["state"]]
+            
+            
             return robot_data
 
         except AmbrogioRobotApiClientAuthenticationError as exception:
