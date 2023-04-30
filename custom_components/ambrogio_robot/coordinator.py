@@ -87,8 +87,10 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
                                 # robot_state["lat"] -> latitude, not always available
                                 # robot_state["lng"] -> longitude, not always available
                                 
-                                robot_data["robots"][robot["key"]]["state"] = ROBOT_STATES[robot_state["state"]]
+                                robot_data["robots"][robot["key"]]["state"] = ROBOT_STATES[robot_state["state"]]["name"]
             
+            # TODO
+            LOGGER.error(robot_data)
             
             return robot_data
 

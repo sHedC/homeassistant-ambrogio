@@ -16,13 +16,41 @@ CONF_ROBOT_NAME = "robot_name"
 CONF_ROBOT_IMEI = "robot_imei"
 CONF_SELECTED_ROBOT = "selected_robot"
 
-ROBOT_STATES = {
-    1: "charging",
-    2: "working",
-    3: "stop",
-    4: "error",
-    5: "nosignal",
-    6: "gotostation",
-    7: "gotoarea",
-    8: "bordercut"
-}
+ROBOT_STATES = [
+    {
+        "name" : "unknown",
+        "icon" : "mdi:crosshairs-question",
+    },
+    {
+        "name" : "charging",
+        "icon" : "mdi:battery-charging",
+    },
+    {
+        "name" : "working",
+        "icon" : "mdi:state-machine",
+    },
+    {
+        "name" : "stop",
+        "icon" : "mdi:stop-circle",
+    },
+    {
+        "name" : "error",
+        "icon" : "mdi:alert-circle",
+    },
+    {
+        "name" : "nosignal",
+        "icon" : "mdi:signal-off",
+    },
+    {
+        "name" : "gotostation",
+        "icon" : "mdi:ev-station",
+    },
+    {
+        "name" : "gotoarea",
+        "icon" : "mdi:grass",
+    },
+    {
+        "name" : "bordercut",
+        "icon" : "mdi:scissors-cutting",
+    },
+]
