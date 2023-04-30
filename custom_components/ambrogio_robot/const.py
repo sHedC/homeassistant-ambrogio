@@ -15,3 +15,14 @@ CONF_MOWERS = "mowers"
 CONF_ROBOT_NAME = "robot_name"
 CONF_ROBOT_IMEI = "robot_imei"
 CONF_SELECTED_ROBOT = "selected_robot"
+
+ROBOT_STATES = {
+    1: "charging",
+    2: "working",
+    3: "stop",
+    4: "error",
+    5: "nosignal",
+    6: "gotostation",
+    7: "gotoarea",
+    8: "bordercut"
+}
