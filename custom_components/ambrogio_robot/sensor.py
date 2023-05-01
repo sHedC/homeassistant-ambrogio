@@ -38,7 +38,9 @@ async def async_setup_entry(
             )
             for robot_imei, robot_name in coordinator.robots.items()
             for entity_description in ENTITY_DESCRIPTIONS
-        ], update_before_add=True)
+        ],
+        update_before_add=True
+    )
 
 
 class AmbrogioRobotSensor(AmbrogioRobotEntity, SensorEntity):
