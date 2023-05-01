@@ -11,6 +11,7 @@ from .const import (
     DOMAIN,
     NAME,
     VERSION,
+    MANUFACTURER,
     CONF_ROBOT_IMEI,
 )
 from .coordinator import AmbrogioDataUpdateCoordinator
@@ -40,6 +41,10 @@ class AmbrogioRobotEntity(CoordinatorEntity):
         
         self._state = 0
         self._available = True
+        self._location = {
+            "latitude": None,
+            "longitude": None,
+        }
         self.attrs: dict[str, Any] = {
             CONF_ROBOT_IMEI: self._robot_imei,
         }
@@ -48,7 +53,7 @@ class AmbrogioRobotEntity(CoordinatorEntity):
             identifiers={(DOMAIN, self.unique_id)},
             name=NAME,
             model=VERSION,
-            manufacturer=NAME,
+            manufacturer=MANUFACTURER,
         )
         
         # TODO
@@ -57,6 +62,8 @@ class AmbrogioRobotEntity(CoordinatorEntity):
         #LOGGER.error(self._robot_name)
 
     async def async_update(self) -> None:
+        
+        # TODO
         #LOGGER.error("async_update")
         #LOGGER.error(self._robot_name)
         
@@ -65,6 +72,8 @@ class AmbrogioRobotEntity(CoordinatorEntity):
     
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
+        
+        # TODO
         #LOGGER.error("_handle_coordinator_update")
         #LOGGER.error(self._robot_name)
         
@@ -75,4 +84,4 @@ class AmbrogioRobotEntity(CoordinatorEntity):
         if self._robot_imei in self.coordinator.data["robots"]:
             robot = self.coordinator.data["robots"][self._robot_imei]
             self._state = robot["state"]
-        
+            self._location = robot["location"]

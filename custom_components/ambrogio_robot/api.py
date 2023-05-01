@@ -50,9 +50,16 @@ class AmbrogioRobotApiClient:
     async def async_check_api_connect(self) -> bool:
         """Check the API Connectivity is valid."""
         
-        return await self.execute("thing.find", {
+        result = await self.execute("thing.find", {
             "key": self._access_token
         })
+        if result == False:
+            return False
+        # Check, if given token is API Client
+        response = await self.get_response()
+        if response["defName"] != "Client":
+            return False
+        return True
 
     async def async_check_robot(self, robot_imei: str) -> bool:
         """Check the Robot Exists."""
@@ -212,8 +219,8 @@ class AmbrogioRobotApiClient:
         self
     ) -> any:
         """Return the response data for the last command if the last command was successful."""
-        if self._status and len(self._response["data"]) > 0:
-            return self._response["data"]
+        if self._status and len(self._response["data"]) > 0 and "params" in self._response["data"]:
+            return self._response["data"]["params"]
         return None
     
     # This method checks the JSON command for the auth parameter. If it is not set, it adds.

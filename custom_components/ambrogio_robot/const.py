@@ -6,6 +6,7 @@ LOGGER: Logger = getLogger(__package__)
 NAME = "Ambrogio Robot"
 DOMAIN = "ambrogio_robot"
 VERSION = "0.0.0"
+MANUFACTURER = "Zucchetti Centro Sistemi"
 ATTRIBUTION = "Data provided by http://jsonplaceholder.typicode.com/"
 
 API_TOKEN = "DJMYYngGNEit40vA"

@@ -42,7 +42,7 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
         """Update data via library."""
         try:
             # TODO
-            #LOGGER.error("_async_update_data")
+            LOGGER.error("_async_update_data")
             
             robot_data = {"robots": {}}
             robot_imeis = []
@@ -51,7 +51,11 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
                 robot_data["robots"][robot_imei] = {
                     "name": robot_name,
                     "imei": robot_imei,
-                    "state": "unknown",
+                    "state": 0,
+                    "location": {
+                        "latitude": None,
+                        "longitude": None,
+                    },
                 }
             
             result = await self.client.execute("thing.list", {
@@ -74,23 +78,22 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
                 "keys": robot_imeis
             })
             response = await self.client.get_response()
-            if "params" in response:
-                if "result" in response["params"]:
-                    result_list = response["params"]["result"]
-                    for i in range(len(result_list)):
-                        robot = result_list[i]
-                        if "key" in robot and "alarms" in robot:
-                            if "robot_state" in robot["alarms"] and robot["key"] in robot_data["robots"]:
-                                robot_state = robot["alarms"]["robot_state"]
-                                
-                                # robot_state["since"] -> timestamp since state change (format 2023-04-30T10:24:47.517Z)
-                                # robot_state["lat"] -> latitude, not always available
-                                # robot_state["lng"] -> longitude, not always available
-                                
-                                robot_data["robots"][robot["key"]]["state"] = robot_state["state"]
+            if "result" in response:
+                result_list = response["result"]
+                for i in range(len(result_list)):
+                    robot = result_list[i]
+                    if "key" in robot and "alarms" in robot:
+                        if "robot_state" in robot["alarms"] and robot["key"] in robot_data["robots"]:
+                            robot_state = robot["alarms"]["robot_state"]
+                            robot_data["robots"][robot["key"]]["state"] = robot_state["state"]
+                            # latitude and longitude, not always available
+                            if "lat" in robot_state and "lng" in robot_state:
+                                robot_data["robots"][robot["key"]]["location"]["latitude"] = robot_state["lat"]
+                                robot_data["robots"][robot["key"]]["location"]["longitude"] = robot_state["lng"]
+                            # robot_state["since"] -> timestamp since state change (format 2023-04-30T10:24:47.517Z)
             
             # TODO
-            #LOGGER.error(robot_data)
+            LOGGER.error(robot_data)
             
             return robot_data
 
