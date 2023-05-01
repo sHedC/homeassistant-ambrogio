@@ -113,4 +113,4 @@ class AmbrogioRobotEntity(CoordinatorEntity):
             self._location = robot["location"]
             self._robot_serial = robot["serial"]
             if len(self._robot_serial) > 0:
-                self._robot_model = self._robot_serial[0:8]
+                self._robot_model = self._robot_serial[0:5]
