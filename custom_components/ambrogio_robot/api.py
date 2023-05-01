@@ -82,7 +82,7 @@ class AmbrogioRobotApiClient:
         headers: dict | None = None,
     ) -> bool:
         """This method sends the TR50 request to the server and parses the response."""
-        self._error = ""
+        self._error = []
         self._status = True
         self._response = ""
         
@@ -122,6 +122,14 @@ class AmbrogioRobotApiClient:
                 if self._status == True:
                     return self._status
                 else:
+                    # if session is invalid, refresh authentication and execute command again
+                    # possible loop, if authentication session is always invalid after successful refresh
+                    for error in ( error for error in self._error if "Authentication session is invalid" in error ):
+                        refresh_auth = await self.auth()
+                        if refresh_auth == True:
+                            data["auth"]["sessionId"] = self._session_id
+                            return await self.post(data, headers)
+                    
                     raise AmbrogioRobotApiClientCommunicationError(
                         "Communication failed: %s" % self._error
                     )
@@ -174,7 +182,6 @@ class AmbrogioRobotApiClient:
         self
     ) -> bool:
         """Depending on the configuration, authenticate the app."""
-        
         if len(self._api_key) > 0 and len(self._access_token) > 0:
             return await self.app_auth(self._api_key, self._access_token)
         return False
@@ -192,7 +199,6 @@ class AmbrogioRobotApiClient:
         update_session_id: bool = True
     ) -> bool:
         """Authenticate the application."""
-        
         try:
             params = {
                 "appId" : access_token,
