@@ -54,7 +54,7 @@ class AmbrogioRobotEntity(CoordinatorEntity):
     @property
     def name(self) -> str:
         """Return the name of the entity."""
-        return self._name
+        return self._robot_name
 
     @property
     def icon(self) -> str:
