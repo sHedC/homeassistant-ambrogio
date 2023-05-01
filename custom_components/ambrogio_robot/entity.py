@@ -36,6 +36,7 @@ class AmbrogioRobotEntity(CoordinatorEntity):
         self._robot_imei = robot_imei
         self._robot_name = robot_name
         self._robot_serial = None
+        self._robot_model = None
 
         self._attr_unique_id = slugify(f"{robot_name}_{entity_key}")
         self.entity_id = f"{entity_type}.{self._attr_unique_id}"
@@ -79,7 +80,7 @@ class AmbrogioRobotEntity(CoordinatorEntity):
                 (DOMAIN, self._robot_imei)
             },
             "name": self._robot_name,
-            "model": self._robot_serial,
+            "model": self._robot_model,
             "manufacturer": MANUFACTURER,
         }
 
@@ -111,3 +112,5 @@ class AmbrogioRobotEntity(CoordinatorEntity):
             self._state = robot["state"]
             self._location = robot["location"]
             self._robot_serial = robot["serial"]
+            if len(self._robot_serial) > 0:
+                self._robot_model = self._robot_serial[0:8]
