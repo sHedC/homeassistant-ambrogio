@@ -52,21 +52,21 @@ class AmbrogioRobotEntity(CoordinatorEntity):
         )
         
         # TODO
-        LOGGER.error("Mower")
-        LOGGER.error(self._robot_imei)
-        LOGGER.error(self._robot_name)
+        #LOGGER.error("Mower")
+        #LOGGER.error(self._robot_imei)
+        #LOGGER.error(self._robot_name)
 
     async def async_update(self) -> None:
-        LOGGER.error("async_update")
-        LOGGER.error(self._robot_name)
+        #LOGGER.error("async_update")
+        #LOGGER.error(self._robot_name)
         
         self._update_handler();
         self.async_write_ha_state()
     
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        LOGGER.error("_handle_coordinator_update")
-        LOGGER.error(self._robot_name)
+        #LOGGER.error("_handle_coordinator_update")
+        #LOGGER.error(self._robot_name)
         
         self._update_handler();
         self.async_write_ha_state()

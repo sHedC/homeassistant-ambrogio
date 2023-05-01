@@ -42,7 +42,7 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
         """Update data via library."""
         try:
             # TODO
-            LOGGER.error("_async_update_data")
+            #LOGGER.error("_async_update_data")
             
             robot_data = {"robots": {}}
             robot_imeis = []
@@ -90,7 +90,7 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
                                 robot_data["robots"][robot["key"]]["state"] = robot_state["state"]
             
             # TODO
-            LOGGER.error(robot_data)
+            #LOGGER.error(robot_data)
             
             return robot_data
 
