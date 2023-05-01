@@ -110,6 +110,7 @@ class AmbrogioRobotEntity(CoordinatorEntity):
         if self._robot_imei in self.coordinator.data["robots"]:
             robot = self.coordinator.data["robots"][self._robot_imei]
             self._state = robot["state"]
+            self._available = (self._state > 0)
             self._location = robot["location"]
             self._robot_serial = robot["serial"]
             if len(self._robot_serial) > 0:
