@@ -48,7 +48,7 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
                 robot_data["robots"][robot_imei] = {
                     "name": robot_name,
                     "imei": robot_imei,
-                    "model": None,
+                    "serial": None,
                     "state": 0,
                     "location": {
                         "latitude": None,
@@ -89,7 +89,7 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
                         # robot_state["since"] -> timestamp since state change (format 2023-04-30T10:24:47.517Z)
                     if "attrs" in robot and "robot_serial" in robot["attrs"]:
                         robot_serial = robot["attrs"]["robot_serial"]
-                        robot_data["robots"][robot["key"]]["model"] = robot_serial["value"]
+                        robot_data["robots"][robot["key"]]["serial"] = robot_serial["value"]
 
             # TODO
             LOGGER.debug("_async_update_data")
