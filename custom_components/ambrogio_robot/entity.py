@@ -13,6 +13,7 @@ from .const import (
     VERSION,
     MANUFACTURER,
     CONF_ROBOT_IMEI,
+    ROBOT_STATES,
 )
 from .coordinator import AmbrogioDataUpdateCoordinator
 
@@ -109,7 +110,7 @@ class AmbrogioRobotEntity(CoordinatorEntity):
     def _update_handler(self):
         if self._robot_imei in self.coordinator.data["robots"]:
             robot = self.coordinator.data["robots"][self._robot_imei]
-            self._state = robot["state"]
+            self._state = robot["state"] if robot["state"] < len(ROBOT_STATES) else 0
             self._available = (self._state > 0)
             self._location = robot["location"]
             self._robot_serial = robot["serial"]
