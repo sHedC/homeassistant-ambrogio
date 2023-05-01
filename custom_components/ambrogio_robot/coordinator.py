@@ -41,9 +41,6 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self):
         """Update data via library."""
         try:
-            # TODO
-            LOGGER.error("_async_update_data")
-            
             robot_data = {"robots": {}}
             robot_imeis = []
             for robot_imei, robot_name in self.robots.items():
@@ -93,7 +90,8 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
                             # robot_state["since"] -> timestamp since state change (format 2023-04-30T10:24:47.517Z)
             
             # TODO
-            LOGGER.error(robot_data)
+            LOGGER.debug("_async_update_data")
+            LOGGER.debug(robot_data)
             
             return robot_data
 
