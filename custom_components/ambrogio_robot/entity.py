@@ -63,7 +63,6 @@ class AmbrogioRobotEntity(CoordinatorEntity):
         LOGGER.debug(self._robot_name)
         
         self._update_handler();
-        self.async_write_ha_state()
     
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
