@@ -5,7 +5,14 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
-from .const import ATTRIBUTION, DOMAIN, NAME, VERSION
+from .const import (
+    ATTRIBUTION,
+    LOGGER,
+    DOMAIN,
+    NAME,
+    VERSION,
+    CONF_ROBOT_IMEI,
+)
 from .coordinator import AmbrogioDataUpdateCoordinator
 
 
@@ -30,6 +37,12 @@ class AmbrogioRobotEntity(CoordinatorEntity):
 
         self._attr_unique_id = slugify(f"{robot_name}_{entity_key}")
         self.entity_id = f"{entity_type}.{self._attr_unique_id}"
+        
+        self._state = 0
+        self._available = True
+        self.attrs: dict[str, Any] = {
+            CONF_ROBOT_IMEI: self._robot_imei,
+        }
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.unique_id)},
@@ -37,3 +50,29 @@ class AmbrogioRobotEntity(CoordinatorEntity):
             model=VERSION,
             manufacturer=NAME,
         )
+        
+        # TODO
+        LOGGER.error("Mower")
+        LOGGER.error(self._robot_imei)
+        LOGGER.error(self._robot_name)
+
+    async def async_update(self) -> None:
+        LOGGER.error("async_update")
+        LOGGER.error(self._robot_name)
+        
+        self._update_handler();
+        self.async_write_ha_state()
+    
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        LOGGER.error("_handle_coordinator_update")
+        LOGGER.error(self._robot_name)
+        
+        self._update_handler();
+        self.async_write_ha_state()
+    
+    def _update_handler(self):
+        if self._robot_imei in self.coordinator.data["robots"]:
+            robot = self.coordinator.data["robots"][self._robot_imei]
+            self._state = robot["state"]
+        

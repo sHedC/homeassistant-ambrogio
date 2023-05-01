@@ -29,15 +29,16 @@ async def async_setup_entry(
     """Set up the sensor platform."""
     coordinator: AmbrogioDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_devices(
-        AmbrogioRobotSensor(
-            coordinator=coordinator,
-            entity_description=entity_description,
-            robot_imei=robot_imei,
-            robot_name=robot_name,
-        )
-        for robot_imei, robot_name in coordinator.robots.items()
-        for entity_description in ENTITY_DESCRIPTIONS
-    )
+        [
+            AmbrogioRobotSensor(
+                coordinator=coordinator,
+                entity_description=entity_description,
+                robot_imei=robot_imei,
+                robot_name=robot_name,
+            )
+            for robot_imei, robot_name in coordinator.robots.items()
+            for entity_description in ENTITY_DESCRIPTIONS
+        ], update_before_add=True)
 
 
 class AmbrogioRobotSensor(AmbrogioRobotEntity, SensorEntity):
