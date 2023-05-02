@@ -18,7 +18,7 @@ from homeassistant.util import slugify
 
 from .const import (
     ATTRIBUTION,
-    LOGGER,
+    #LOGGER,
     DOMAIN,
     MANUFACTURER,
     CONF_MOWERS,
@@ -67,7 +67,7 @@ class AmbrogioRobotEntity(CoordinatorEntity):
         self._last_communication = None
         self._last_seen = None
         self._last_pull = None
-        
+
         self.entity_id = f"{entity_type}.{self._attr_unique_id}"
 
     @property
@@ -96,7 +96,7 @@ class AmbrogioRobotEntity(CoordinatorEntity):
         return {
             ATTR_IDENTIFIERS: {(DOMAIN, self._robot_imei)},
             ATTR_NAME: self._robot_name,
-            ATTR_MANUFACTURER: self._manufacturer,
+            ATTR_MANUFACTURER: MANUFACTURER,
             ATTR_MODEL: self._model,
             ATTR_SW_VERSION: self._sw_version,
         }
