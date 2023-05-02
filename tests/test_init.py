@@ -33,7 +33,7 @@ async def test_setup_and_reload(
 ):
     """Test we can setup the integration."""
     entry = MockConfigEntry(
-        domain=DOMAIN, data=mock_configdata[DOMAIN], options=mock_configopts
+        domain=DOMAIN, data=mock_configdata[DOMAIN], options=mock_configopts[DOMAIN]
     )
     entry.add_to_hass(hass)
 
@@ -76,7 +76,7 @@ async def test_unload_entry(
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=mock_configdata[DOMAIN],
-        options=mock_configopts,
+        options=mock_configopts[DOMAIN],
         entry_id="test",
     )
     entry.add_to_hass(hass)

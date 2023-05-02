@@ -21,7 +21,9 @@ TEST_CONFIGDATA = {
     }
 }
 TEST_CONFIGOPTIONS = {
-    CONF_MOWERS: {"1234567890": "Some Mower"},
+    DOMAIN: {
+        CONF_MOWERS: {"1234567890": "Some Mower"},
+    }
 }
 
 

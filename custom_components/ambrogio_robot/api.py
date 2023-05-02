@@ -8,6 +8,8 @@ import socket
 import aiohttp
 import async_timeout
 
+from .const import LOGGER
+
 
 class AmbrogioRobotApiClientError(Exception):
     """Exception to indicate a general API error."""
@@ -133,6 +135,9 @@ class AmbrogioRobotApiClient:
                         for error in self._error
                         if "Authentication session is invalid" in error
                     ):
+                        # TODO: sHedC: Refactor for RUFF error, Not sure I understand this loop.
+                        LOGGER.debug("Some Error %s", error)
+
                         refresh_auth = await self.auth()
                         if refresh_auth:
                             data["auth"]["sessionId"] = self._session_id
