@@ -10,6 +10,7 @@ sudo apt -y dist-upgrade
 sudo apt -y install bluez
 
 # Upgrade PIP
+clear
 pip install --upgrade pip
 
 # Setup Configuration if missing
@@ -19,10 +20,12 @@ fi
 
 # Setup Required Python Modules.
 if [ ${BUILD_TYPE} == "dev" ]; then
+    clear
     python3 -m pip install --requirement requirements_dev.txt
 fi
 
 if [ ${BUILD_TYPE} == "run" ]; then
+    clear
     python3 -m pip install --requirement requirements.txt
 fi
 

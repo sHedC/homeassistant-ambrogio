@@ -84,4 +84,5 @@ class AmbrogioRobotDeviceTracker(AmbrogioRobotEntity, TrackerEntity):
 
     @property
     def device_class(self):
+        """Return Device Class."""
         return None
