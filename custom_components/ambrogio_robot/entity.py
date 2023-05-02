@@ -8,6 +8,7 @@ from homeassistant.const import (
     ATTR_LOCATION,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
+    ATTR_SW_VERSION,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     ATTR_STATE,
@@ -50,8 +51,9 @@ class AmbrogioRobotEntity(CoordinatorEntity):
 
         self._robot_imei = robot_imei
         self._robot_name = robot_name
-        self._robot_serial = None
-        self._robot_model = None
+        self._serial = None
+        self._model = None
+        self._sw_version = None
 
         self._attr_unique_id = slugify(f"{robot_name}_{entity_key}")
 
@@ -94,8 +96,9 @@ class AmbrogioRobotEntity(CoordinatorEntity):
         return {
             ATTR_IDENTIFIERS: {(DOMAIN, self._robot_imei)},
             ATTR_NAME: self._robot_name,
-            ATTR_MODEL: self._robot_model,
-            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MANUFACTURER: self._manufacturer,
+            ATTR_MODEL: self._model,
+            ATTR_SW_VERSION: self._sw_version,
         }
 
     @property
@@ -125,12 +128,13 @@ class AmbrogioRobotEntity(CoordinatorEntity):
             self._available = self._state > 0
             if robot[ATTR_LOCATION] is not None:
                     self._location = robot[ATTR_LOCATION]
-            self._robot_serial = robot[ATTR_SERIAL]
+            self._serial = robot[ATTR_SERIAL]
             if (
-                self._robot_serial is not None
-                and len(self._robot_serial) > 4
+                self._serial is not None
+                and len(self._serial) > 4
             ):
-                self._robot_model = self._robot_serial[0:5]
+                self._model = self._serial[0:5]
+            self._sw_version = robot[ATTR_SW_VERSION]
 
             self._connected = robot[ATTR_CONNECTED]
             self._last_communication = robot[ATTR_LAST_COMM]

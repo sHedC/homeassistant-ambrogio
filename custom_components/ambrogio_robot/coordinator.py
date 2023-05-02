@@ -9,6 +9,7 @@ from homeassistant.const import (
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     ATTR_STATE,
+    ATTR_SW_VERSION,
 )
 from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
@@ -74,6 +75,7 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
                     CONF_ROBOT_NAME: robot_name,
                     CONF_ROBOT_IMEI: robot_imei,
                     ATTR_SERIAL: None,
+                    ATTR_SW_VERSION: None,
                     ATTR_STATE: 0,
                     ATTR_LOCATION: None,
                     ATTR_CONNECTED: False,
@@ -122,19 +124,21 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
                                 ATTR_LATITUDE: robot_state["lat"],
                                 ATTR_LONGITUDE: robot_state["lng"],
                             }
-                        # robot_state["since"] -> timestamp since state change
-                        # (format 2023-04-30T10:24:47.517Z)
-                    if "attrs" in robot and "robot_serial" in robot["attrs"]:
-                        robot_serial = robot["attrs"]["robot_serial"]
-                        robot_data[CONF_MOWERS][robot["key"]][ATTR_SERIAL] = robot_serial[
-                            "value"
-                        ]
+                    if "attrs" in robot:
+                        if "robot_serial" in robot["attrs"]:
+                            robot_data[CONF_MOWERS][robot["key"]][ATTR_SERIAL] = robot["attrs"]["robot_serial"][
+                                "value"
+                            ]
+                        if "program_version" in robot["attrs"]:
+                            robot_data[CONF_MOWERS][robot["key"]][ATTR_SW_VERSION] = robot["attrs"]["program_version"][
+                                "value"
+                            ]
                     if "connected" in robot:
-                        robot_data[CONF_MOWERS][mower["key"]][ATTR_CONNECTED] = robot["connected"]
+                        robot_data[CONF_MOWERS][robot["key"]][ATTR_CONNECTED] = robot["connected"]
                     if "lastCommunication" in robot:
-                        robot_data[CONF_MOWERS][mower["key"]][ATTR_LAST_COMM] = datetime.strptime(robot["lastCommunication"], API_DATETIME_FORMAT)
+                        robot_data[CONF_MOWERS][robot["key"]][ATTR_LAST_COMM] = datetime.strptime(robot["lastCommunication"], API_DATETIME_FORMAT)
                     if "lastSeen" in robot:
-                        robot_data[CONF_MOWERS][mower["key"]][ATTR_LAST_SEEN] = datetime.strptime(robot["lastSeen"], API_DATETIME_FORMAT)
+                        robot_data[CONF_MOWERS][robot["key"]][ATTR_LAST_SEEN] = datetime.strptime(robot["lastSeen"], API_DATETIME_FORMAT)
 
             # TODO
             LOGGER.debug("_async_update_data")
