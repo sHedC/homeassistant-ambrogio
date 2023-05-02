@@ -9,9 +9,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
-    LOGGER,
+    # LOGGER,
     DOMAIN,
-    ROBOT_STATES,
+    # ROBOT_STATES,
 )
 from .coordinator import AmbrogioDataUpdateCoordinator
 from .entity import AmbrogioRobotEntity
@@ -41,7 +41,7 @@ async def async_setup_entry(
             for robot_imei, robot_name in coordinator.robots.items()
             for entity_description in ENTITY_DESCRIPTIONS
         ],
-        update_before_add=True
+        update_before_add=True,
     )
 
 
@@ -57,18 +57,22 @@ class AmbrogioRobotDeviceTracker(AmbrogioRobotEntity, TrackerEntity):
     ) -> None:
         """Initialize the sensor class."""
         super().__init__(
-            coordinator, robot_imei, robot_name, "device_tracker", entity_description.key
+            coordinator,
+            robot_imei,
+            robot_name,
+            "device_tracker",
+            entity_description.key,
         )
         self.entity_description = entity_description
 
     @property
-    def latitude(self) -> Optional[float]:
+    def latitude(self) -> float | None:
         """Return latitude value of the device."""
         location = self._location.get("latitude", None)
         return location if location else None
 
     @property
-    def longitude(self) -> Optional[float]:
+    def longitude(self) -> float | None:
         """Return longitude value of the device."""
         location = self._location.get("longitude", None)
         return location if location else None
