@@ -368,7 +368,7 @@ class AmbrogioOptionsFlowHandler(OptionsFlow):
         )
 
     async def async_step_delete(self, user_input: dict | None = None) -> FlowResult:
-        """Delete a Robot from the Garage"""
+        """Delete a Robot from the Garage."""
         _errors: dict[str, str] = {}
 
         mowers: dict = self.options[CONF_MOWERS]
@@ -389,7 +389,7 @@ class AmbrogioOptionsFlowHandler(OptionsFlow):
 
         # Build the Mower Configurations Up
         mower_list = []
-        for mower_imei in mowers.keys():
+        for mower_imei in mowers:
             mower_list.append(
                 selector.SelectOptionDict(
                     value=mower_imei, label=f"{mowers[mower_imei]} ({mower_imei})"
