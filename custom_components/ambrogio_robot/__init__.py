@@ -7,10 +7,8 @@ from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_NAME,
     CONF_API_TOKEN,
     CONF_ACCESS_TOKEN,
-    CONF_SCAN_INTERVAL,
     Platform,
 )
 from homeassistant.core import HomeAssistant

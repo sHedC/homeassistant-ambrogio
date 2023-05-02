@@ -1,18 +1,19 @@
 """Test Ambrogio config flow."""
-from unittest.mock import patch
+# from unittest.mock import patch
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.core import HomeAssistant
-from homeassistant.const import (
-    CONF_API_TOKEN,
-    CONF_ACCESS_TOKEN,
-    CONF_NAME,
-)
+
+# from homeassistant.const import (
+#    CONF_API_TOKEN,
+#    CONF_ACCESS_TOKEN,
+#    CONF_NAME,
+# )
 
 from custom_components.ambrogio_robot.const import (
     DOMAIN,
-    CONF_ROBOT_NAME,
-    CONF_ROBOT_IMEI,
+    #    CONF_ROBOT_NAME,
+    #    CONF_ROBOT_IMEI,
 )
 
 

@@ -256,7 +256,7 @@ class AmbrogioOptionsFlowHandler(OptionsFlow):
         )
 
     async def async_step_add(self, user_input: dict | None = None) -> FlowResult:
-        """Add a Robot to the Garage"""
+        """Add a Robot to the Garage."""
         _errors: dict[str, str] = {}
 
         if user_input is not None:
@@ -307,7 +307,7 @@ class AmbrogioOptionsFlowHandler(OptionsFlow):
         # Build the Mower Configurations Up
         mowers: dict = self.options[CONF_MOWERS]
         mower_list = []
-        for mower_imei in mowers.keys():
+        for mower_imei in mowers:
             mower_list.append(
                 selector.SelectOptionDict(
                     value=mower_imei, label=f"{mowers[mower_imei]} ({mower_imei})"
