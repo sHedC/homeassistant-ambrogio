@@ -78,7 +78,15 @@ class AmbrogioRobotApiClient:
         data: dict | None = None,
         headers: dict | None = None,
     ) -> bool:
-        """This method sends the TR50 request to the server and parses the response."""
+        """Send the TR50 request to the server and parses the response.
+
+        Args:
+            data (dict | None): JSON command and arguments to send.
+            headers (dict | None): Headers to send.
+
+        Returns:
+            bool: Success or failure to post.
+        """
         self._error = []
         self._status = True
         self._response = ""
@@ -153,8 +161,19 @@ class AmbrogioRobotApiClient:
     # @param    params     dict      The command parameters.
     # @return   bool       Success or failure to post.
     async def execute(self, command: str, params: dict | bool = False) -> bool:
-        """Package the command and the params into an array and sends the
-        command to the configured endpoint for processing."""
+        """Execute commands agains the deviceWISE API.
+
+        Package the command and the params into an array and sends the
+        command to the configured endpoint for processing.
+
+        Args:
+            command (str): The TR50 command to execute.
+            params (dict): The command parameters.
+
+        Returns:
+            bool: Successor failure to post.
+
+        """
         if command == "api.authenticate":
             parameters = {"auth": {"command": "api.authenticate", "params": params}}
         else:
@@ -220,11 +239,11 @@ class AmbrogioRobotApiClient:
     # @param    mixed    data    A JSON string or the dict representation of JSON.
     # @return   string   A JSON string with the auth parameter.
     async def set_json_auth(self, data: str) -> str:
-        """This method checks the JSON command for the auth parameter. If it is not set, it adds."""
+        """Check the JSON command for the auth parameter. If it is not set, it adds."""
         if not isinstance(data, dict):
             data = json.loads(data)
 
-        if not "auth" in data:
+        if "auth" not in data:
             if len(self._session_id) == 0:
                 await self.auth()
             # if it is still empty, we cannot proceed

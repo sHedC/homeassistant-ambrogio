@@ -7,7 +7,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
-    LOGGER,
     DOMAIN,
     ROBOT_STATES,
 )
@@ -39,7 +38,7 @@ async def async_setup_entry(
             for robot_imei, robot_name in coordinator.robots.items()
             for entity_description in ENTITY_DESCRIPTIONS
         ],
-        update_before_add=True
+        update_before_add=True,
     )
 
 
@@ -60,15 +59,11 @@ class AmbrogioRobotSensor(AmbrogioRobotEntity, SensorEntity):
         self.entity_description = entity_description
 
     @property
-    def state(self) -> str | None:
-        return ROBOT_STATES[self._state]["name"]
-    
-    @property
     def icon(self) -> str:
         """Return the icon of the entity."""
         return ROBOT_STATES[self._state]["icon"]
-    
+
     @property
     def native_value(self) -> str:
         """Return the native value of the sensor."""
-        return ROBOT_STATES[0]["name"]
+        return ROBOT_STATES[self._state]["name"]

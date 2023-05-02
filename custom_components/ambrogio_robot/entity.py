@@ -1,7 +1,6 @@
 """BlueprintEntity class."""
 from __future__ import annotations
 
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
@@ -9,8 +8,6 @@ from .const import (
     ATTRIBUTION,
     LOGGER,
     DOMAIN,
-    NAME,
-    VERSION,
     MANUFACTURER,
     CONF_ROBOT_IMEI,
     ROBOT_STATES,
@@ -41,14 +38,14 @@ class AmbrogioRobotEntity(CoordinatorEntity):
 
         self._attr_unique_id = slugify(f"{robot_name}_{entity_key}")
         self.entity_id = f"{entity_type}.{self._attr_unique_id}"
-        
+
         self._state = 0
         self._available = True
         self._location = {
             "latitude": None,
             "longitude": None,
         }
-        self.attrs: dict[str, Any] = {
+        self.attrs: dict[str, any] = {
             CONF_ROBOT_IMEI: self._robot_imei,
         }
 
@@ -77,42 +74,41 @@ class AmbrogioRobotEntity(CoordinatorEntity):
         """Return the device info."""
 
         return {
-            "identifiers": {
-                (DOMAIN, self._robot_imei)
-            },
+            "identifiers": {(DOMAIN, self._robot_imei)},
             "name": self._robot_name,
             "model": self._robot_model,
             "manufacturer": MANUFACTURER,
         }
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, any]:
+        """Return Extra Attributes."""
         return self.attrs
 
     async def async_update(self) -> None:
-        
+        """Peform async_update."""
         # TODO
         LOGGER.debug("async_update")
         LOGGER.debug(self._robot_name)
-        
-        self._update_handler();
-    
+
+        self._update_handler()
+
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        
+
         # TODO
         LOGGER.debug("_handle_coordinator_update")
         LOGGER.debug(self._robot_name)
-        
-        self._update_handler();
+
+        self._update_handler()
         self.async_write_ha_state()
-    
+
     def _update_handler(self):
         if self._robot_imei in self.coordinator.data["robots"]:
             robot = self.coordinator.data["robots"][self._robot_imei]
             self._state = robot["state"] if robot["state"] < len(ROBOT_STATES) else 0
-            self._available = (self._state > 0)
+            self._available = self._state > 0
             self._location = robot["location"]
             self._robot_serial = robot["serial"]
-            if self._robot_serial != None and len(self._robot_serial) > 0:
+            if self._robot_serial is not None and len(self._robot_serial) > 0:
                 self._robot_model = self._robot_serial[0:5]
