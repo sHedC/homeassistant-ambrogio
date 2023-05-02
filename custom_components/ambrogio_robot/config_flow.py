@@ -152,17 +152,20 @@ class AmbrogioFlowHandler(ConfigFlow, domain=DOMAIN):
         self, api_token: str, access_token: str, robot_imei: str
     ) -> str:
         """Test the Initial Settings connect and mower exists."""
-        client_api = AmbrogioRobotApiClient(
-            api_token, access_token, async_create_clientsession(self.hass)
-        )
+        session = async_create_clientsession(self.hass)
+        return_msg = ""
+        client_api = AmbrogioRobotApiClient(api_token, access_token, session)
         if await client_api.async_check_api_connect():
             # Validate Mower Exists.
             if await client_api.async_check_robot(robot_imei=robot_imei):
-                return ""
+                return_msg = ""
             else:
-                return "robot_not_found"
+                return_msg = "robot_not_found"
         else:
-            return "unknown"
+            return_msg = "unknown"
+
+        session.close()
+        return return_msg
 
 
 class AmbrogioOptionsFlowHandler(OptionsFlow):

@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from datetime import timedelta
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
@@ -37,6 +36,14 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
             name=DOMAIN,
             update_interval=timedelta(minutes=5),
         )
+
+    async def __aenter__(self):
+        """Return Self."""
+        return self
+
+    async def __aexit__(self, *excinfo):
+        """Close Session before class is destroyed."""
+        await self.client._session.close()
 
     async def _async_update_data(self):
         """Update data via library."""

@@ -20,24 +20,26 @@ def override_entity():
         yield
 
 
-async def test_setup(hass: HomeAssistant, mock_configdata: dict):
+async def test_setup(hass: HomeAssistant, mock_configdata: dict, mock_configopts: dict):
     """Test we can setup the integration."""
-    entry = MockConfigEntry(domain=DOMAIN, data=mock_configdata[DOMAIN])
+    entry = MockConfigEntry(
+        domain=DOMAIN, data=mock_configdata[DOMAIN], options=mock_configopts
+    )
     entry.add_to_hass(hass)
 
     with patch(
         (
             "custom_components.ambrogio_robot.coordinator."
-            "BlueprintDataUpdateCoordinator._async_update_data"
+            "AmbrogioDataUpdateCoordinator._async_update_data"
         ),
         return_value={
-            "userId": 1,
-            "id": 1,
-            "title": "sunt aut facere repellat provident occaecati excepturi optio reprehenderit",
-            "body": (
-                "quia et suscipit\nsuscipit recusandae consequuntur expedita et cum\nreprehenderit "
-                "molestiae ut ut quas totam\nnostrum rerum est autem sunt rem eveniet architecto"
-            ),
+            "robots": {
+                "12233444": {
+                    "name": "robot_name",
+                    "imei": "robot_imei",
+                    "state": "charging",
+                }
+            }
         },
     ) as mock_sync:
         assert await async_setup_entry(hass, entry)
