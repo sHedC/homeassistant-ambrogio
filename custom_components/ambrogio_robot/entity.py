@@ -1,6 +1,7 @@
 """BlueprintEntity class."""
 from __future__ import annotations
 
+from datetime import datetime
 from homeassistant.const import (
     ATTR_NAME,
     ATTR_IDENTIFIERS,
@@ -25,6 +26,7 @@ from .const import (
     ATTR_CONNECTED,
     ATTR_LAST_COMM,
     ATTR_LAST_SEEN,
+    ATTR_LAST_PULL,
     ROBOT_STATES,
 )
 from .coordinator import AmbrogioDataUpdateCoordinator
@@ -52,7 +54,6 @@ class AmbrogioRobotEntity(CoordinatorEntity):
         self._robot_model = None
 
         self._attr_unique_id = slugify(f"{robot_name}_{entity_key}")
-        self.entity_id = f"{entity_type}.{self._attr_unique_id}"
 
         self._state = 0
         self._available = True
@@ -60,11 +61,12 @@ class AmbrogioRobotEntity(CoordinatorEntity):
             ATTR_LATITUDE: None,
             ATTR_LONGITUDE: None,
         }
-        self._timestamp = None
+        self._connected = False
+        self._last_communication = None
+        self._last_seen = None
+        self._last_pull = None
         
-        self.attrs: dict[str, any] = {
-            CONF_ROBOT_IMEI: self._robot_imei,
-        }
+        self.entity_id = f"{entity_type}.{self._attr_unique_id}"
 
     @property
     def name(self) -> str:
@@ -89,7 +91,6 @@ class AmbrogioRobotEntity(CoordinatorEntity):
     @property
     def device_info(self):
         """Return the device info."""
-
         return {
             ATTR_IDENTIFIERS: {(DOMAIN, self._robot_imei)},
             ATTR_NAME: self._robot_name,
@@ -100,7 +101,13 @@ class AmbrogioRobotEntity(CoordinatorEntity):
     @property
     def extra_state_attributes(self) -> dict[str, any]:
         """Return Extra Attributes."""
-        return self.attrs
+        return {
+            CONF_ROBOT_IMEI: self._robot_imei,
+            ATTR_CONNECTED: self._connected,
+            ATTR_LAST_COMM: self._last_communication,
+            ATTR_LAST_SEEN: self._last_seen,
+            ATTR_LAST_PULL: self._last_pull,
+        }
 
     async def async_update(self) -> None:
         """Peform async_update."""
@@ -124,3 +131,8 @@ class AmbrogioRobotEntity(CoordinatorEntity):
                 and len(self._robot_serial) > 4
             ):
                 self._robot_model = self._robot_serial[0:5]
+
+            self._connected = robot[ATTR_CONNECTED]
+            self._last_communication = robot[ATTR_LAST_COMM]
+            self._last_seen = robot[ATTR_LAST_SEEN]
+            self._last_pull = datetime.now()

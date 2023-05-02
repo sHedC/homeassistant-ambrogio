@@ -24,6 +24,7 @@ from .api import (
 from .const import (
     DOMAIN,
     LOGGER,
+    API_DATETIME_FORMAT,
     CONF_MOWERS,
     CONF_ROBOT_NAME,
     CONF_ROBOT_IMEI,
@@ -128,6 +129,12 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
                         robot_data[CONF_MOWERS][robot["key"]][ATTR_SERIAL] = robot_serial[
                             "value"
                         ]
+                    if "connected" in robot:
+                        robot_data[CONF_MOWERS][mower["key"]][ATTR_CONNECTED] = robot["connected"]
+                    if "lastCommunication" in robot:
+                        robot_data[CONF_MOWERS][mower["key"]][ATTR_LAST_COMM] = datetime.strptime(robot["lastCommunication"], API_DATETIME_FORMAT)
+                    if "lastSeen" in robot:
+                        robot_data[CONF_MOWERS][mower["key"]][ATTR_LAST_SEEN] = datetime.strptime(robot["lastSeen"], API_DATETIME_FORMAT)
 
             # TODO
             LOGGER.debug("_async_update_data")
