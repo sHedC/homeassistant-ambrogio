@@ -1,6 +1,16 @@
 """BlueprintEntity class."""
 from __future__ import annotations
 
+from homeassistant.const import (
+    ATTR_NAME,
+    ATTR_IDENTIFIERS,
+    ATTR_LOCATION,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_LATITUDE,
+    ATTR_LONGITUDE,
+    ATTR_STATE,
+)
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
@@ -9,7 +19,12 @@ from .const import (
     LOGGER,
     DOMAIN,
     MANUFACTURER,
+    CONF_MOWERS,
     CONF_ROBOT_IMEI,
+    ATTR_SERIAL,
+    ATTR_CONNECTED,
+    ATTR_LAST_COMM,
+    ATTR_LAST_SEEN,
     ROBOT_STATES,
 )
 from .coordinator import AmbrogioDataUpdateCoordinator
@@ -42,9 +57,11 @@ class AmbrogioRobotEntity(CoordinatorEntity):
         self._state = 0
         self._available = True
         self._location = {
-            "latitude": None,
-            "longitude": None,
+            ATTR_LATITUDE: None,
+            ATTR_LONGITUDE: None,
         }
+        self._timestamp = None
+        
         self.attrs: dict[str, any] = {
             CONF_ROBOT_IMEI: self._robot_imei,
         }
@@ -74,10 +91,10 @@ class AmbrogioRobotEntity(CoordinatorEntity):
         """Return the device info."""
 
         return {
-            "identifiers": {(DOMAIN, self._robot_imei)},
-            "name": self._robot_name,
-            "model": self._robot_model,
-            "manufacturer": MANUFACTURER,
+            ATTR_IDENTIFIERS: {(DOMAIN, self._robot_imei)},
+            ATTR_NAME: self._robot_name,
+            ATTR_MODEL: self._robot_model,
+            ATTR_MANUFACTURER: MANUFACTURER,
         }
 
     @property
@@ -87,29 +104,21 @@ class AmbrogioRobotEntity(CoordinatorEntity):
 
     async def async_update(self) -> None:
         """Peform async_update."""
-        # TODO
-        LOGGER.debug("async_update")
-        LOGGER.debug(self._robot_name)
-
         self._update_handler()
 
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-
-        # TODO
-        LOGGER.debug("_handle_coordinator_update")
-        LOGGER.debug(self._robot_name)
-
         self._update_handler()
         self.async_write_ha_state()
 
     def _update_handler(self):
-        if self._robot_imei in self.coordinator.data["robots"]:
-            robot = self.coordinator.data["robots"][self._robot_imei]
-            self._state = robot["state"] if robot["state"] < len(ROBOT_STATES) else 0
+        if self._robot_imei in self.coordinator.data[CONF_MOWERS]:
+            robot = self.coordinator.data[CONF_MOWERS][self._robot_imei]
+            self._state = robot[ATTR_STATE] if robot[ATTR_STATE] < len(ROBOT_STATES) else 0
             self._available = self._state > 0
-            self._location = robot["location"]
-            self._robot_serial = robot["serial"]
+            if robot[ATTR_LOCATION] is not None:
+                    self._location = robot[ATTR_LOCATION]
+            self._robot_serial = robot[ATTR_SERIAL]
             if (
                 self._robot_serial is not None
                 and len(self._robot_serial) > 4

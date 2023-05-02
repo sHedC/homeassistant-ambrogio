@@ -17,6 +17,11 @@ CONF_ROBOT_NAME = "robot_name"
 CONF_ROBOT_IMEI = "robot_imei"
 CONF_SELECTED_ROBOT = "selected_robot"
 
+ATTR_SERIAL = "serial"
+ATTR_CONNECTED = "connected"
+ATTR_LAST_COMM = "last_communication"
+ATTR_LAST_SEEN = "last_seen"
+
 ROBOT_STATES = [
     {
         "name" : "unknown",
