@@ -1,0 +1,14 @@
+{
+    "robots": {
+        "1234567890": {
+            "name": "Robot Name",
+            "imei": "1234567890",
+            "serial": "AM1234567890",
+            "state": 2,
+            "location": {
+                "latitude": 10.433465,
+                "longitude": -1.553063
+            }
+        }
+    }
+}

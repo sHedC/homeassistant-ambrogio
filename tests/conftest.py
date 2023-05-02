@@ -1,5 +1,7 @@
 """Global fixtures for Ambrogio Robot Integration."""
 from unittest.mock import patch
+import os
+import json
 import pytest
 
 from homeassistant.const import (
@@ -16,12 +18,21 @@ TEST_CONFIGDATA = {
     DOMAIN: {
         CONF_API_TOKEN: "apitoken",
         CONF_ACCESS_TOKEN: "access_token",
-        CONF_MOWERS: {"1223344": "Some Mower"},
     }
 }
 TEST_CONFIGOPTIONS = {
-    CONF_MOWERS: {"1223344": "Some Mower"},
+    CONF_MOWERS: {"1234567890": "Some Mower"},
 }
+
+
+def load_fixture(folder: str, filename: str) -> dict:
+    """Load a JSON fixture for testing."""
+    try:
+        path = os.path.join(os.path.dirname(__file__), "fixtures", folder, filename)
+        with open(path, encoding="utf-8") as fptr:
+            return json.loads(fptr.read())
+    except OSError:
+        return {}
 
 
 @pytest.fixture(autouse=True)
@@ -42,6 +53,12 @@ def mock_configdata():
 def mock_configopts():
     """Return a default mock options."""
     return TEST_CONFIGOPTIONS
+
+
+@pytest.fixture
+def mock_robotdata():
+    """Return default mock Robot Data."""
+    return load_fixture("controller", "default_data.json")
 
 
 # This fixture is used to prevent HomeAssistant from attempting to create and dismiss persistent
