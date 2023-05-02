@@ -19,6 +19,7 @@ from .const import CONF_MOWERS, DOMAIN
 from .coordinator import AmbrogioDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [
+    Platform.DEVICE_TRACKER,
     Platform.SENSOR,
 ]
 
