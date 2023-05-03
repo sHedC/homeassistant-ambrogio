@@ -99,7 +99,7 @@ class AmbrogioRobotApiClient:
         data = await self.set_json_auth(data)
 
         try:
-            async with async_timeout.timeout(10):
+            async with async_timeout.timeout(60):
                 response = await self._session.request(
                     method="POST",
                     url="https://api-de.devicewise.com/api",
