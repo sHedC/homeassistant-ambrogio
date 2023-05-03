@@ -10,12 +10,19 @@ MANUFACTURER = "Zucchetti Centro Sistemi"
 ATTRIBUTION = "Data provided by http://jsonplaceholder.typicode.com/"
 
 API_TOKEN = "DJMYYngGNEit40vA"
+API_DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
 
 CONF_CONFIRM = "confirm"
 CONF_MOWERS = "mowers"
 CONF_ROBOT_NAME = "robot_name"
 CONF_ROBOT_IMEI = "robot_imei"
 CONF_SELECTED_ROBOT = "selected_robot"
+
+ATTR_SERIAL = "serial"
+ATTR_CONNECTED = "connected"
+ATTR_LAST_COMM = "last_communication"
+ATTR_LAST_SEEN = "last_seen"
+ATTR_LAST_PULL = "last_pull"
 
 ROBOT_STATES = [
     {

@@ -1,9 +1,18 @@
 """DataUpdateCoordinator for Ambrogio Robot."""
 from __future__ import annotations
 
-from datetime import timedelta
-
+from datetime import (
+    timedelta,
+    datetime,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.const import (
+    ATTR_LOCATION,
+    ATTR_LATITUDE,
+    ATTR_LONGITUDE,
+    ATTR_STATE,
+    ATTR_SW_VERSION,
+)
 from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
     UpdateFailed,
@@ -18,6 +27,14 @@ from .api import (
 from .const import (
     DOMAIN,
     LOGGER,
+    API_DATETIME_FORMAT,
+    CONF_MOWERS,
+    CONF_ROBOT_NAME,
+    CONF_ROBOT_IMEI,
+    ATTR_SERIAL,
+    ATTR_CONNECTED,
+    ATTR_LAST_COMM,
+    ATTR_LAST_SEEN,
     # ROBOT_STATES,
 )
 
@@ -52,19 +69,20 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self):
         """Update data via library."""
         try:
-            robot_data = {"robots": {}}
+            robot_data = {CONF_MOWERS: {}}
             robot_imeis = []
             for robot_imei, robot_name in self.robots.items():
                 robot_imeis.append(robot_imei)
-                robot_data["robots"][robot_imei] = {
-                    "name": robot_name,
-                    "imei": robot_imei,
-                    "serial": None,
-                    "state": 0,
-                    "location": {
-                        "latitude": None,
-                        "longitude": None,
-                    },
+                robot_data[CONF_MOWERS][robot_imei] = {
+                    CONF_ROBOT_NAME: robot_name,
+                    CONF_ROBOT_IMEI: robot_imei,
+                    ATTR_SERIAL: None,
+                    ATTR_SW_VERSION: None,
+                    ATTR_STATE: 0,
+                    ATTR_LOCATION: None,
+                    ATTR_CONNECTED: False,
+                    ATTR_LAST_COMM: None,
+                    ATTR_LAST_SEEN: None,
                 }
 
             await self.client.execute(
@@ -95,28 +113,34 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
                 for robot in (
                     robot
                     for robot in result_list
-                    if "key" in robot and robot["key"] in robot_data["robots"]
+                    if "key" in robot and robot["key"] in robot_data[CONF_MOWERS]
                 ):
                     if "alarms" in robot and "robot_state" in robot["alarms"]:
                         robot_state = robot["alarms"]["robot_state"]
-                        robot_data["robots"][robot["key"]]["state"] = robot_state[
+                        robot_data[CONF_MOWERS][robot["key"]][ATTR_STATE] = robot_state[
                             "state"
                         ]
                         # latitude and longitude, not always available
                         if "lat" in robot_state and "lng" in robot_state:
-                            robot_data["robots"][robot["key"]]["location"][
-                                "latitude"
-                            ] = robot_state["lat"]
-                            robot_data["robots"][robot["key"]]["location"][
-                                "longitude"
-                            ] = robot_state["lng"]
-                        # robot_state["since"] -> timestamp since state change
-                        # (format 2023-04-30T10:24:47.517Z)
-                    if "attrs" in robot and "robot_serial" in robot["attrs"]:
-                        robot_serial = robot["attrs"]["robot_serial"]
-                        robot_data["robots"][robot["key"]]["serial"] = robot_serial[
-                            "value"
-                        ]
+                            robot_data[CONF_MOWERS][robot["key"]][ATTR_LOCATION] = {
+                                ATTR_LATITUDE: robot_state["lat"],
+                                ATTR_LONGITUDE: robot_state["lng"],
+                            }
+                    if "attrs" in robot:
+                        if "robot_serial" in robot["attrs"]:
+                            robot_data[CONF_MOWERS][robot["key"]][ATTR_SERIAL] = robot["attrs"]["robot_serial"][
+                                "value"
+                            ]
+                        if "program_version" in robot["attrs"]:
+                            robot_data[CONF_MOWERS][robot["key"]][ATTR_SW_VERSION] = robot["attrs"]["program_version"][
+                                "value"
+                            ]
+                    if "connected" in robot:
+                        robot_data[CONF_MOWERS][robot["key"]][ATTR_CONNECTED] = robot["connected"]
+                    if "lastCommunication" in robot:
+                        robot_data[CONF_MOWERS][robot["key"]][ATTR_LAST_COMM] = datetime.strptime(robot["lastCommunication"], API_DATETIME_FORMAT)
+                    if "lastSeen" in robot:
+                        robot_data[CONF_MOWERS][robot["key"]][ATTR_LAST_SEEN] = datetime.strptime(robot["lastSeen"], API_DATETIME_FORMAT)
 
             # TODO
             LOGGER.debug("_async_update_data")

@@ -1,15 +1,33 @@
 """BlueprintEntity class."""
 from __future__ import annotations
 
+from datetime import datetime
+from homeassistant.const import (
+    ATTR_NAME,
+    ATTR_IDENTIFIERS,
+    ATTR_LOCATION,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_SW_VERSION,
+    ATTR_LATITUDE,
+    ATTR_LONGITUDE,
+    ATTR_STATE,
+)
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
 from .const import (
     ATTRIBUTION,
-    LOGGER,
+    #LOGGER,
     DOMAIN,
     MANUFACTURER,
+    CONF_MOWERS,
     CONF_ROBOT_IMEI,
+    ATTR_SERIAL,
+    ATTR_CONNECTED,
+    ATTR_LAST_COMM,
+    ATTR_LAST_SEEN,
+    ATTR_LAST_PULL,
     ROBOT_STATES,
 )
 from .coordinator import AmbrogioDataUpdateCoordinator
@@ -33,21 +51,24 @@ class AmbrogioRobotEntity(CoordinatorEntity):
 
         self._robot_imei = robot_imei
         self._robot_name = robot_name
-        self._robot_serial = None
-        self._robot_model = None
+        self._serial = None
+        self._model = None
+        self._sw_version = None
 
         self._attr_unique_id = slugify(f"{robot_name}_{entity_key}")
-        self.entity_id = f"{entity_type}.{self._attr_unique_id}"
 
         self._state = 0
         self._available = True
         self._location = {
-            "latitude": None,
-            "longitude": None,
+            ATTR_LATITUDE: None,
+            ATTR_LONGITUDE: None,
         }
-        self.attrs: dict[str, any] = {
-            CONF_ROBOT_IMEI: self._robot_imei,
-        }
+        self._connected = False
+        self._last_communication = None
+        self._last_seen = None
+        self._last_pull = None
+
+        self.entity_id = f"{entity_type}.{self._attr_unique_id}"
 
     @property
     def name(self) -> str:
@@ -72,43 +93,50 @@ class AmbrogioRobotEntity(CoordinatorEntity):
     @property
     def device_info(self):
         """Return the device info."""
-
         return {
-            "identifiers": {(DOMAIN, self._robot_imei)},
-            "name": self._robot_name,
-            "model": self._robot_model,
-            "manufacturer": MANUFACTURER,
+            ATTR_IDENTIFIERS: {(DOMAIN, self._robot_imei)},
+            ATTR_NAME: self._robot_name,
+            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MODEL: self._model,
+            ATTR_SW_VERSION: self._sw_version,
         }
 
     @property
     def extra_state_attributes(self) -> dict[str, any]:
         """Return Extra Attributes."""
-        return self.attrs
+        return {
+            CONF_ROBOT_IMEI: self._robot_imei,
+            ATTR_CONNECTED: self._connected,
+            ATTR_LAST_COMM: self._last_communication,
+            ATTR_LAST_SEEN: self._last_seen,
+            ATTR_LAST_PULL: self._last_pull,
+        }
 
     async def async_update(self) -> None:
         """Peform async_update."""
-        # TODO
-        LOGGER.debug("async_update")
-        LOGGER.debug(self._robot_name)
-
         self._update_handler()
 
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-
-        # TODO
-        LOGGER.debug("_handle_coordinator_update")
-        LOGGER.debug(self._robot_name)
-
         self._update_handler()
         self.async_write_ha_state()
 
     def _update_handler(self):
-        if self._robot_imei in self.coordinator.data["robots"]:
-            robot = self.coordinator.data["robots"][self._robot_imei]
-            self._state = robot["state"] if robot["state"] < len(ROBOT_STATES) else 0
+        if self._robot_imei in self.coordinator.data[CONF_MOWERS]:
+            robot = self.coordinator.data[CONF_MOWERS][self._robot_imei]
+            self._state = robot[ATTR_STATE] if robot[ATTR_STATE] < len(ROBOT_STATES) else 0
             self._available = self._state > 0
-            self._location = robot["location"]
-            self._robot_serial = robot["serial"]
-            if self._robot_serial is not None and len(self._robot_serial) > 0:
-                self._robot_model = self._robot_serial[0:5]
+            if robot[ATTR_LOCATION] is not None:
+                    self._location = robot[ATTR_LOCATION]
+            self._serial = robot[ATTR_SERIAL]
+            if (
+                self._serial is not None
+                and len(self._serial) > 4
+            ):
+                self._model = self._serial[0:5]
+            self._sw_version = robot[ATTR_SW_VERSION]
+
+            self._connected = robot[ATTR_CONNECTED]
+            self._last_communication = robot[ATTR_LAST_COMM]
+            self._last_seen = robot[ATTR_LAST_SEEN]
+            self._last_pull = datetime.now()
