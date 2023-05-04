@@ -24,6 +24,7 @@ from .const import (
     CONF_MOWERS,
     CONF_ROBOT_IMEI,
     ATTR_SERIAL,
+    ATTR_MESSAGE,
     ATTR_CONNECTED,
     ATTR_LAST_COMM,
     ATTR_LAST_SEEN,
@@ -58,6 +59,7 @@ class AmbrogioRobotEntity(CoordinatorEntity):
         self._attr_unique_id = slugify(f"{robot_name}_{entity_key}")
 
         self._state = 0
+        self._message = 0
         self._available = True
         self._location = {
             ATTR_LATITUDE: None,
@@ -120,9 +122,10 @@ class AmbrogioRobotEntity(CoordinatorEntity):
         if self._robot_imei in self.coordinator.data[CONF_MOWERS]:
             robot = self.coordinator.data[CONF_MOWERS][self._robot_imei]
             self._state = robot[ATTR_STATE] if robot[ATTR_STATE] < len(ROBOT_STATES) else 0
+            self._message = robot[ATTR_MESSAGE]
             self._available = self._state > 0
             if robot[ATTR_LOCATION] is not None:
-                    self._location = robot[ATTR_LOCATION]
+                self._location = robot[ATTR_LOCATION]
             self._serial = robot[ATTR_SERIAL]
             if (
                 self._serial is not None
