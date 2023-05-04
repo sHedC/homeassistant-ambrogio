@@ -109,7 +109,7 @@ ROBOT_STATES = [
     },
     # few robots has unknown state 9
     {
-        "name" : "unknown",
+        "name" : "undefined",
         "icon" : "mdi:crosshairs-question",
     },
 ]

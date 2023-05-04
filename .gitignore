@@ -29,3 +29,5 @@ secrets.yaml
 
 .devcontainer.json
 api_notes
+/.project
+/.pydevproject
