@@ -1,9 +1,13 @@
 """Sensor platform for Ambrogio Robot."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -18,6 +22,7 @@ ENTITY_DESCRIPTIONS = (
         key="state",
         name="Robot State",
         icon="mdi:format-quote-close",
+        device_class=SensorDeviceClass.ENUM,
         translation_key="state",
     ),
 )
