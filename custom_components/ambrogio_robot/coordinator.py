@@ -28,6 +28,7 @@ from .const import (
     DOMAIN,
     LOGGER,
     API_DATETIME_FORMAT,
+    API_ACK_TIMEOUT,
     CONF_MOWERS,
     CONF_ROBOT_NAME,
     CONF_ROBOT_IMEI,
@@ -152,3 +153,147 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
             raise ConfigEntryAuthFailed(exception) from exception
         except AmbrogioRobotApiClientError as exception:
             raise UpdateFailed(exception) from exception
+
+    async def async_wake_up(
+        self,
+        imei: str,
+    ) -> bool:
+        """Send command wake_up to lawn nower."""
+        LOGGER.debug(f"wake_up: {imei}")
+        try:
+            return await self.client.execute(
+                "sms.send",
+                {
+                    "coding": "SEVEN_BIT",
+                    "imei": imei,
+                    "message": "UP",
+                },
+            )
+        except Exception as exception:
+            LOGGER.exception(exception)
+        return False
+
+    async def async_set_profile(
+        self,
+        imei: str,
+        profile: int,
+    ) -> bool:
+        """Send command set_profile to lawn nower."""
+        LOGGER.debug(f"set_profile: {imei}")
+        try:
+            await self.async_wake_up(imei)
+            return await self.client.execute(
+                "method.exec",
+                {
+                    "method": "set_profile",
+                    "imei": imei,
+                    "params": {
+                        "profile": (profile - 1),
+                    },
+                    "ackTimeout": API_ACK_TIMEOUT,
+                    "singleton": True,
+                },
+            )
+        except Exception as exception:
+            LOGGER.exception(exception)
+        return False
+
+    async def async_work_until(
+        self,
+        imei: str,
+        area: int,
+        hours: int,
+        minutes: int,
+    ) -> bool:
+        """Send command work_until to lawn nower."""
+        LOGGER.debug(f"work_until: {imei}")
+        try:
+            await self.async_wake_up(imei)
+            return await self.client.execute(
+                "method.exec",
+                {
+                    "method": "work_until",
+                    "imei": imei,
+                    "params": {
+                        "area": (area - 1),
+                        "hh": hours,
+                        "mm": minutes,
+                    },
+                    "ackTimeout": API_ACK_TIMEOUT,
+                    "singleton": True,
+                },
+            )
+        except Exception as exception:
+            LOGGER.exception(exception)
+        return False
+
+    async def async_border_cut(
+        self,
+        imei: str,
+    ) -> bool:
+        """Send command border_cut to lawn nower."""
+        LOGGER.debug(f"border_cut: {imei}")
+        try:
+            await self.async_wake_up(imei)
+            return await self.client.execute(
+                "method.exec",
+                {
+                    "method": "border_cut",
+                    "imei": imei,
+                    "ackTimeout": API_ACK_TIMEOUT,
+                    "singleton": True,
+                },
+            )
+        except Exception as exception:
+            LOGGER.exception(exception)
+        return False
+
+    async def async_charge_until(
+        self,
+        imei: str,
+        hours: int,
+        minutes: int,
+        weekday: int,
+    ) -> bool:
+        """Send command charge_until to lawn nower."""
+        LOGGER.debug(f"charge_until: {imei}")
+        try:
+            await self.async_wake_up(imei)
+            return await self.client.execute(
+                "method.exec",
+                {
+                    "method": "charge_until",
+                    "imei": imei,
+                    "params": {
+                        "hh": hours,
+                        "mm": minutes,
+                        "weekday": weekday,
+                    },
+                    "ackTimeout": API_ACK_TIMEOUT,
+                    "singleton": True,
+                },
+            )
+        except Exception as exception:
+            LOGGER.exception(exception)
+        return False
+
+    async def async_trace_position(
+        self,
+        imei: str,
+    ) -> bool:
+        """Send command trace_position to lawn nower."""
+        LOGGER.debug(f"trace_position: {imei}")
+        try:
+            await self.async_wake_up(imei)
+            return await self.client.execute(
+                "method.exec",
+                {
+                    "method": "trace_position",
+                    "imei": imei,
+                    "ackTimeout": API_ACK_TIMEOUT,
+                    "singleton": True,
+                },
+            )
+        except Exception as exception:
+            LOGGER.exception(exception)
+        return False

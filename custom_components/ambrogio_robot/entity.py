@@ -131,9 +131,9 @@ class AmbrogioRobotEntity(CoordinatorEntity):
             self._serial = robot[ATTR_SERIAL]
             if (
                 self._serial is not None
-                and len(self._serial) > 4
+                and len(self._serial) > 5
             ):
-                self._model = self._serial[0:5]
+                self._model = self._serial[0:6]
             self._sw_version = robot[ATTR_SW_VERSION]
 
             self._connected = robot[ATTR_CONNECTED]
