@@ -18,6 +18,7 @@ ENTITY_DESCRIPTIONS = (
         key="state",
         name="Robot State",
         icon="mdi:format-quote-close",
+        translation_key="state",
     ),
 )
 
