@@ -123,9 +123,10 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
                         robot_data[CONF_MOWERS][robot["key"]][ATTR_STATE] = robot_state[
                             "state"
                         ]
-                        robot_data[CONF_MOWERS][robot["key"]][ATTR_MESSAGE] = int(robot_state[
-                            "msg"
-                        ])
+                        if "msg" in robot_state:
+                            robot_data[CONF_MOWERS][robot["key"]][ATTR_MESSAGE] = int(robot_state[
+                                "msg"
+                            ])
                         # latitude and longitude, not always available
                         if "lat" in robot_state and "lng" in robot_state:
                             robot_data[CONF_MOWERS][robot["key"]][ATTR_LOCATION] = {
