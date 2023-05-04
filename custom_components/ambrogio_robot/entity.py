@@ -69,8 +69,18 @@ class AmbrogioRobotEntity(CoordinatorEntity):
         self._last_communication = None
         self._last_seen = None
         self._last_pull = None
+        
+        self._additional_state_attributes = {}
 
         self.entity_id = f"{entity_type}.{self._attr_unique_id}"
+
+    def set_additional_state_attributes(
+            self,
+            additional_attributes: dict[str, any],
+        ) -> None:
+        """Set additional attributes."""
+        if isinstance(additional_attributes, dict):
+            self._additional_state_attributes.update(additional_attributes)
 
     @property
     def name(self) -> str:
@@ -100,14 +110,17 @@ class AmbrogioRobotEntity(CoordinatorEntity):
 
     @property
     def extra_state_attributes(self) -> dict[str, any]:
-        """Return Extra Attributes."""
-        return {
+        """Return axtra attributes."""
+        _extra_state_attributes = {
             CONF_ROBOT_IMEI: self._robot_imei,
             ATTR_CONNECTED: self._connected,
             ATTR_LAST_COMM: self._last_communication,
             ATTR_LAST_SEEN: self._last_seen,
             ATTR_LAST_PULL: self._last_pull,
         }
+        _extra_state_attributes.update(self._additional_state_attributes)
+        
+        return _extra_state_attributes
 
     async def async_update(self) -> None:
         """Peform async_update."""
