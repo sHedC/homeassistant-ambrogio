@@ -85,7 +85,7 @@
                     "bordercut": "Border cut"
                 },
                 "state_attributes": {
-                    "imei": {
+                    "robot_imei": {
                         "name": "IMEI"
                     },
                     "connected": {
@@ -111,7 +111,7 @@
             "location": {
                 "name": "Location",
                 "state_attributes": {
-                    "imei": {
+                    "robot_imei": {
                         "name": "IMEI"
                     },
                     "connected": {
