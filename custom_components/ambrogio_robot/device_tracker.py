@@ -58,11 +58,11 @@ class AmbrogioRobotDeviceTracker(AmbrogioRobotEntity, TrackerEntity):
     ) -> None:
         """Initialize the sensor class."""
         super().__init__(
-            coordinator,
-            robot_imei,
-            robot_name,
-            "device_tracker",
-            entity_description.key,
+            coordinator=coordinator,
+            robot_imei=robot_imei,
+            robot_name=robot_name,
+            entity_type="device_tracker",
+            entity_key=entity_description.key,
         )
         self.entity_description = entity_description
 

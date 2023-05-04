@@ -21,7 +21,6 @@ ENTITY_DESCRIPTIONS = (
     SensorEntityDescription(
         key="state",
         name="Robot State",
-        icon="mdi:format-quote-close",
         device_class=SensorDeviceClass.ENUM,
         translation_key="state",
     ),
@@ -60,7 +59,11 @@ class AmbrogioRobotSensor(AmbrogioRobotEntity, SensorEntity):
     ) -> None:
         """Initialize the sensor class."""
         super().__init__(
-            coordinator, robot_imei, robot_name, "sensor", entity_description.key
+            coordinator=coordinator,
+            robot_imei=robot_imei,
+            robot_name=robot_name,
+            entity_type="sensor",
+            entity_key=entity_description.key,
         )
         self.entity_description = entity_description
 

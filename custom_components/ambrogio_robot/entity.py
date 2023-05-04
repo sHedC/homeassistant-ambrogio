@@ -76,11 +76,6 @@ class AmbrogioRobotEntity(CoordinatorEntity):
         return self._robot_name
 
     @property
-    def icon(self) -> str:
-        """Return the icon of the entity."""
-        return "mdi:robot-mower"
-
-    @property
     def unique_id(self) -> str:
         """Return the unique ID of the sensor."""
         return self._attr_unique_id
