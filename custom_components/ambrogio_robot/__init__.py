@@ -20,10 +20,14 @@ from .const import (
     CONF_MOWERS,
     SERVICE_SET_PROFILE,
     SERVICE_SET_PROFILE_SCHEMA,
+    SERVICE_WORK_NOW,
+    SERVICE_WORK_NOW_SCHEMA,
     SERVICE_WORK_UNTIL,
     SERVICE_WORK_UNTIL_SCHEMA,
     SERVICE_BORDER_CUT,
     SERVICE_BORDER_CUT_SCHEMA,
+    SERVICE_CHARGE_NOW,
+    SERVICE_CHARGE_NOW_SCHEMA,
     SERVICE_CHARGE_UNTIL,
     SERVICE_CHARGE_UNTIL_SCHEMA,
     SERVICE_TRACE_POSITION,
@@ -54,6 +58,16 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
                 )
             )
 
+    async def async_handle_work_now(call) -> None:
+        """Handle the service call."""
+        targets = await async_handle_service(call)
+        for imei, coordinator in targets.items():
+            hass.async_create_task(
+                coordinator.async_work_now(
+                    imei,
+                )
+            )
+
     async def async_handle_work_until(call) -> None:
         """Handle the service call."""
         targets = await async_handle_service(call)
@@ -73,6 +87,16 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
         for imei, coordinator in targets.items():
             hass.async_create_task(
                 coordinator.async_border_cut(
+                    imei,
+                )
+            )
+
+    async def async_handle_charge_now(call) -> None:
+        """Handle the service call."""
+        targets = await async_handle_service(call)
+        for imei, coordinator in targets.items():
+            hass.async_create_task(
+                coordinator.async_charge_now(
                     imei,
                 )
             )
@@ -130,6 +154,12 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     )
     hass.services.async_register(
         DOMAIN,
+        SERVICE_WORK_NOW,
+        async_handle_work_now,
+        schema=SERVICE_WORK_NOW_SCHEMA
+    )
+    hass.services.async_register(
+        DOMAIN,
         SERVICE_WORK_UNTIL,
         async_handle_work_until,
         schema=SERVICE_WORK_UNTIL_SCHEMA
@@ -139,6 +169,12 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
         SERVICE_BORDER_CUT,
         async_handle_border_cut,
         schema=SERVICE_BORDER_CUT_SCHEMA
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_CHARGE_NOW,
+        async_handle_charge_now,
+        schema=SERVICE_CHARGE_NOW_SCHEMA
     )
     hass.services.async_register(
         DOMAIN,

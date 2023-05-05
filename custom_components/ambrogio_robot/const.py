@@ -39,6 +39,12 @@ SERVICE_SET_PROFILE_SCHEMA = vol.Schema(
         vol.Required("profile"): vol.All(vol.Coerce(int), vol.Range(min=1, max=3)),
     }
 )
+SERVICE_WORK_NOW = "work_now"
+SERVICE_WORK_NOW_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_DEVICE_ID): cv.entity_ids_or_uuids,
+    }
+)
 SERVICE_WORK_UNTIL = "work_until"
 SERVICE_WORK_UNTIL_SCHEMA = vol.Schema(
     {
@@ -50,6 +56,12 @@ SERVICE_WORK_UNTIL_SCHEMA = vol.Schema(
 )
 SERVICE_BORDER_CUT = "border_cut"
 SERVICE_BORDER_CUT_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_DEVICE_ID): cv.entity_ids_or_uuids,
+    }
+)
+SERVICE_CHARGE_NOW = "charge_now"
+SERVICE_CHARGE_NOW_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_DEVICE_ID): cv.entity_ids_or_uuids,
     }
@@ -74,43 +86,62 @@ ROBOT_STATES = [
     {
         "name" : "unknown",
         "icon" : "mdi:crosshairs-question",
+        "color": "#000000",
     },
     {
-        "name" : "charging",
+        "name" : "charge",
         "icon" : "mdi:battery-charging",
+        "color": "#CCCC00",
     },
     {
-        "name" : "working",
+        "name" : "work",
         "icon" : "mdi:state-machine",
+        "color": "#007700",
     },
     {
-        "name" : "stop",
-        "icon" : "mdi:stop-circle",
+        "name" : "pause",
+        "icon" : "mdi:pause",
+        "color": "#0000FF",
     },
     {
-        "name" : "error",
+        "name" : "fail",
         "icon" : "mdi:alert-circle",
+        "color": "#FF0000",
     },
     {
         "name" : "nosignal",
         "icon" : "mdi:signal-off",
+        "color": "#FF7700",
     },
     {
         "name" : "gotostation",
         "icon" : "mdi:ev-station",
+        "color": "#FFFF00",
     },
     {
         "name" : "gotoarea",
         "icon" : "mdi:grass",
+        "color": "#00FF00",
     },
     {
         "name" : "bordercut",
         "icon" : "mdi:scissors-cutting",
+        "color": "#00CC00",
     },
-    # few robots has unknown state 9
     {
-        "name" : "undefined",
-        "icon" : "mdi:crosshairs-question",
+        "name" : "expired",
+        "icon" : "mdi:clock-alert",
+        "color": "#000000",
+    },
+    {
+        "name" : "renewed",
+        "icon" : "mdi:clock-check",
+        "color": "#00B5B5",
+    },
+    {
+        "name" : "work_standby",
+        "icon" : "mdi:power-standby",
+        "color": "#E61EDC",
     },
 ]
 

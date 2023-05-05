@@ -78,10 +78,10 @@
                         "name": "IMEI"
                     },
                     "connected": {
-                        "name": "Connected",
+                        "name": "Connection State",
                         "state": {
-                            "true": "Yes",
-                            "false": "No"
+                            "true": "Connected",
+                            "false": "Disconnected"
                         }
                     },
                     "last_communication": {
@@ -355,25 +355,27 @@
                 "name": "State",
                 "state": {
                     "unknown": "Unknown",
-                    "charging": "Charging",
-                    "working": "Working",
-                    "stop": "Stop",
-                    "error": "Error",
+                    "charge": "Charge",
+                    "work": "Work",
+                    "pause": "Pause",
+                    "fail": "Error",
                     "nosignal": "No signal",
                     "gotostation": "Go to station",
                     "gotoarea": "Go to area",
                     "bordercut": "Border cut",
-                    "undefined": "Undefined"
+                    "expired": "Expired",
+                    "renewed": "Renewed",
+                    "work_standby": "Work standby"
                 },
                 "state_attributes": {
                     "robot_imei": {
                         "name": "IMEI"
                     },
                     "connected": {
-                        "name": "Connected",
+                        "name": "Connection State",
                         "state": {
-                            "true": "Yes",
-                            "false": "No"
+                            "true": "Connected",
+                            "false": "Disconnected"
                         }
                     },
                     "last_communication": {
@@ -396,10 +398,10 @@
                         "name": "IMEI"
                     },
                     "connected": {
-                        "name": "Connected",
+                        "name": "Connection State",
                         "state": {
-                            "true": "Yes",
-                            "false": "No"
+                            "true": "Connected",
+                            "false": "Disconnected"
                         }
                     },
                     "last_communication": {

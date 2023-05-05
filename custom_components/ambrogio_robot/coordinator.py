@@ -206,6 +206,27 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
             LOGGER.exception(exception)
         return False
 
+    async def async_work_now(
+        self,
+        imei: str,
+    ) -> bool:
+        """Send command work_now to lawn nower."""
+        LOGGER.debug(f"work_now: {imei}")
+        try:
+            await self.async_wake_up(imei)
+            return await self.client.execute(
+                "method.exec",
+                {
+                    "method": "work_now",
+                    "imei": imei,
+                    "ackTimeout": API_ACK_TIMEOUT,
+                    "singleton": True,
+                },
+            )
+        except Exception as exception:
+            LOGGER.exception(exception)
+        return False
+
     async def async_work_until(
         self,
         imei: str,
@@ -247,6 +268,27 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
                 "method.exec",
                 {
                     "method": "border_cut",
+                    "imei": imei,
+                    "ackTimeout": API_ACK_TIMEOUT,
+                    "singleton": True,
+                },
+            )
+        except Exception as exception:
+            LOGGER.exception(exception)
+        return False
+
+    async def async_charge_now(
+        self,
+        imei: str,
+    ) -> bool:
+        """Send command charge_now to lawn nower."""
+        LOGGER.debug(f"charge_now: {imei}")
+        try:
+            await self.async_wake_up(imei)
+            return await self.client.execute(
+                "method.exec",
+                {
+                    "method": "charge_now",
                     "imei": imei,
                     "ackTimeout": API_ACK_TIMEOUT,
                     "singleton": True,
