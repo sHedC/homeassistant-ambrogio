@@ -1,7 +1,10 @@
 """BlueprintEntity class."""
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import (
+    datetime,
+    timezone,
+)
 from homeassistant.const import (
     ATTR_NAME,
     ATTR_IDENTIFIERS,
@@ -149,5 +152,5 @@ class AmbrogioRobotEntity(CoordinatorEntity):
             self._connected = robot[ATTR_CONNECTED]
             self._last_communication = robot[ATTR_LAST_COMM]
             self._last_seen = robot[ATTR_LAST_SEEN]
-            self._last_pull = datetime.now()
+            self._last_pull = datetime.utcnow().replace(tzinfo=timezone.utc)
             self.update_extra_state_attributes()
