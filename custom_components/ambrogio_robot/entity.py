@@ -50,6 +50,9 @@ class AmbrogioRobotEntity(CoordinatorEntity):
         """Initialize."""
         super().__init__(coordinator)
 
+        self._entity_type = entity_type
+        self._entity_key = entity_key
+
         self._robot_imei = robot_imei
         self._robot_name = robot_name
         self._serial = None
