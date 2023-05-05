@@ -3,9 +3,9 @@ from __future__ import annotations
 
 from homeassistant.components.device_tracker import SOURCE_TYPE_GPS
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
-from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -17,10 +17,11 @@ from .coordinator import AmbrogioDataUpdateCoordinator
 from .entity import AmbrogioRobotEntity
 
 ENTITY_DESCRIPTIONS = (
-    SensorEntityDescription(
+    EntityDescription(
         key="location",
         name="Robot Location",
         icon="mdi:robot-mower",
+        translation_key="location",
     ),
 )
 
@@ -51,17 +52,17 @@ class AmbrogioRobotDeviceTracker(AmbrogioRobotEntity, TrackerEntity):
     def __init__(
         self,
         coordinator: AmbrogioDataUpdateCoordinator,
-        entity_description: SensorEntityDescription,
+        entity_description: EntityDescription,
         robot_imei: str,
         robot_name: str,
     ) -> None:
         """Initialize the sensor class."""
         super().__init__(
-            coordinator,
-            robot_imei,
-            robot_name,
-            "device_tracker",
-            entity_description.key,
+            coordinator=coordinator,
+            robot_imei=robot_imei,
+            robot_name=robot_name,
+            entity_type="device_tracker",
+            entity_key=entity_description.key,
         )
         self.entity_description = entity_description
 

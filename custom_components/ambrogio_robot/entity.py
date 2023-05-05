@@ -24,6 +24,7 @@ from .const import (
     CONF_MOWERS,
     CONF_ROBOT_IMEI,
     ATTR_SERIAL,
+    ATTR_ERROR,
     ATTR_CONNECTED,
     ATTR_LAST_COMM,
     ATTR_LAST_SEEN,
@@ -58,6 +59,7 @@ class AmbrogioRobotEntity(CoordinatorEntity):
         self._attr_unique_id = slugify(f"{robot_name}_{entity_key}")
 
         self._state = 0
+        self._error = 0
         self._available = True
         self._location = {
             ATTR_LATITUDE: None,
@@ -68,17 +70,18 @@ class AmbrogioRobotEntity(CoordinatorEntity):
         self._last_seen = None
         self._last_pull = None
 
+        self._additional_extra_state_attributes = {}
+
         self.entity_id = f"{entity_type}.{self._attr_unique_id}"
+
+    def update_extra_state_attributes(self) -> None:
+        """Update extra attributes."""
+        self._additional_extra_state_attributes = {}
 
     @property
     def name(self) -> str:
         """Return the name of the entity."""
         return self._robot_name
-
-    @property
-    def icon(self) -> str:
-        """Return the icon of the entity."""
-        return "mdi:robot-mower"
 
     @property
     def unique_id(self) -> str:
@@ -103,14 +106,17 @@ class AmbrogioRobotEntity(CoordinatorEntity):
 
     @property
     def extra_state_attributes(self) -> dict[str, any]:
-        """Return Extra Attributes."""
-        return {
+        """Return axtra attributes."""
+        _extra_state_attributes = {
             CONF_ROBOT_IMEI: self._robot_imei,
             ATTR_CONNECTED: self._connected,
             ATTR_LAST_COMM: self._last_communication,
             ATTR_LAST_SEEN: self._last_seen,
             ATTR_LAST_PULL: self._last_pull,
         }
+        _extra_state_attributes.update(self._additional_extra_state_attributes)
+
+        return _extra_state_attributes
 
     async def async_update(self) -> None:
         """Peform async_update."""
@@ -125,9 +131,10 @@ class AmbrogioRobotEntity(CoordinatorEntity):
         if self._robot_imei in self.coordinator.data[CONF_MOWERS]:
             robot = self.coordinator.data[CONF_MOWERS][self._robot_imei]
             self._state = robot[ATTR_STATE] if robot[ATTR_STATE] < len(ROBOT_STATES) else 0
+            self._error = robot[ATTR_ERROR]
             self._available = self._state > 0
             if robot[ATTR_LOCATION] is not None:
-                    self._location = robot[ATTR_LOCATION]
+                self._location = robot[ATTR_LOCATION]
             self._serial = robot[ATTR_SERIAL]
             if (
                 self._serial is not None
@@ -140,3 +147,4 @@ class AmbrogioRobotEntity(CoordinatorEntity):
             self._last_communication = robot[ATTR_LAST_COMM]
             self._last_seen = robot[ATTR_LAST_SEEN]
             self._last_pull = datetime.now()
+            self.update_extra_state_attributes()

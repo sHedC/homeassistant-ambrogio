@@ -33,6 +33,7 @@ from .const import (
     CONF_ROBOT_NAME,
     CONF_ROBOT_IMEI,
     ATTR_SERIAL,
+    ATTR_ERROR,
     ATTR_CONNECTED,
     ATTR_LAST_COMM,
     ATTR_LAST_SEEN,
@@ -80,11 +81,14 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
                     ATTR_SERIAL: None,
                     ATTR_SW_VERSION: None,
                     ATTR_STATE: 0,
+                    ATTR_ERROR: 0,
                     ATTR_LOCATION: None,
                     ATTR_CONNECTED: False,
                     ATTR_LAST_COMM: None,
                     ATTR_LAST_SEEN: None,
                 }
+            if len(robot_imeis) == 0:
+                return robot_data
 
             await self.client.execute(
                 "thing.list",
@@ -121,6 +125,10 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
                         robot_data[CONF_MOWERS][robot["key"]][ATTR_STATE] = robot_state[
                             "state"
                         ]
+                        if "msg" in robot_state:
+                            robot_data[CONF_MOWERS][robot["key"]][ATTR_ERROR] = int(robot_state[
+                                "msg"
+                            ])
                         # latitude and longitude, not always available
                         if "lat" in robot_state and "lng" in robot_state:
                             robot_data[CONF_MOWERS][robot["key"]][ATTR_LOCATION] = {

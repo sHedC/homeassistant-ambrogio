@@ -33,6 +33,7 @@ from .api import AmbrogioRobotApiClient
 from .coordinator import AmbrogioDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
     Platform.DEVICE_TRACKER,
     Platform.SENSOR,
 ]
