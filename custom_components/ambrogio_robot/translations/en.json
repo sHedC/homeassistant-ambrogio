@@ -78,10 +78,10 @@
                         "name": "IMEI"
                     },
                     "connected": {
-                        "name": "Connected",
+                        "name": "Connection State",
                         "state": {
-                            "true": "Yes",
-                            "false": "No"
+                            "true": "Connected",
+                            "false": "Disconnected"
                         }
                     },
                     "last_communication": {
@@ -372,10 +372,10 @@
                         "name": "IMEI"
                     },
                     "connected": {
-                        "name": "Connected",
+                        "name": "Connection State",
                         "state": {
-                            "true": "Yes",
-                            "false": "No"
+                            "true": "Connected",
+                            "false": "Disconnected"
                         }
                     },
                     "last_communication": {
@@ -398,10 +398,10 @@
                         "name": "IMEI"
                     },
                     "connected": {
-                        "name": "Connected",
+                        "name": "Connection State",
                         "state": {
-                            "true": "Yes",
-                            "false": "No"
+                            "true": "Connected",
+                            "false": "Disconnected"
                         }
                     },
                     "last_communication": {
