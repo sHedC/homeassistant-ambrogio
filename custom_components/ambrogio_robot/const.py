@@ -17,7 +17,7 @@ NAME = "Ambrogio Robot"
 DOMAIN = "ambrogio_robot"
 VERSION = "0.0.0"
 MANUFACTURER = "Zucchetti Centro Sistemi"
-ATTRIBUTION = "Data provided by http://jsonplaceholder.typicode.com/"
+ATTRIBUTION = "Data provided gently by Telit IoT Platform"
 
 API_TOKEN = "DJMYYngGNEit40vA"
 API_DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
