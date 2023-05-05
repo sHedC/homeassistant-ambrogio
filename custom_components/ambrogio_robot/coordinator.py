@@ -37,7 +37,6 @@ from .const import (
     ATTR_CONNECTED,
     ATTR_LAST_COMM,
     ATTR_LAST_SEEN,
-    # ROBOT_STATES,
 )
 
 
@@ -51,14 +50,16 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
         client: AmbrogioRobotApiClient,
     ) -> None:
         """Initialize."""
-        self.client = client
-        self.robots = robots
         super().__init__(
             hass=hass,
             logger=LOGGER,
             name=DOMAIN,
             update_interval=timedelta(minutes=5),
         )
+        self.robots = robots
+        self.client = client
+
+        self.robot_data = {}
 
     async def __aenter__(self):
         """Return Self."""
@@ -155,8 +156,9 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
             LOGGER.debug("_async_update_data")
             LOGGER.debug(robot_data)
 
-            return robot_data
+            self.robot_data = robot_data
 
+            return self.robot_data
         except AmbrogioRobotApiClientAuthenticationError as exception:
             raise ConfigEntryAuthFailed(exception) from exception
         except AmbrogioRobotApiClientError as exception:
@@ -379,6 +381,29 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
                     "method": "keep_out",
                     "imei": imei,
                     "params": _params,
+                    "ackTimeout": API_ACK_TIMEOUT,
+                    "singleton": True,
+                },
+            )
+        except Exception as exception:
+            LOGGER.exception(exception)
+        return False
+
+    async def async_custom_command(
+        self,
+        imei: str,
+        command: str,
+        params: dict[str, any] | list[any] | None = None,
+    ) -> None:
+        """Send custom command to lawn nower."""
+        try:
+            await self.async_wake_up(imei)
+            return await self.client.execute(
+                "method.exec",
+                {
+                    "method": command,
+                    "imei": imei,
+                    "params": params,
                     "ackTimeout": API_ACK_TIMEOUT,
                     "singleton": True,
                 },
