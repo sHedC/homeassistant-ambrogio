@@ -18,6 +18,7 @@ from homeassistant.components.vacuum import (
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
+    LOGGER,
     DOMAIN,
     ROBOT_STATES,
     ROBOT_ERRORS,
@@ -69,7 +70,7 @@ class AmbrogioRobotVacuum(AmbrogioRobotEntity, StateVacuumEntity):
     def __init__(
         self,
         coordinator: AmbrogioDataUpdateCoordinator,
-        entity_description: BinarySensorEntityDescription,
+        entity_description: VacuumEntityDescription,
         robot_imei: str,
         robot_name: str,
     ) -> None:
