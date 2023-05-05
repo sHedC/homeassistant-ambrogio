@@ -4,6 +4,7 @@ from logging import Logger, getLogger
 import voluptuous as vol
 from homeassistant.const import (
     CONF_DEVICE_ID,
+    CONF_LOCATION,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_RADIUS,
@@ -88,9 +89,13 @@ SERVICE_KEEP_OUT = "keep_out"
 SERVICE_KEEP_OUT_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_DEVICE_ID): cv.entity_ids_or_uuids,
-        vol.Required(CONF_LATITUDE): cv.latitude,
-        vol.Required(CONF_LONGITUDE): cv.longitude,
-        vol.Required(CONF_RADIUS): vol.Coerce(int),
+        vol.Required(CONF_LOCATION): vol.Schema(
+            {
+                vol.Required(CONF_LATITUDE): float,
+                vol.Required(CONF_LONGITUDE): float,
+                vol.Optional(CONF_RADIUS): int,
+            }
+        ),
         vol.Optional("hours"): vol.All(vol.Coerce(int), vol.Range(min=0, max=23)),
         vol.Optional("minutes"): vol.All(vol.Coerce(int), vol.Range(min=0, max=59)),
         vol.Optional("index"): vol.Coerce(int),

@@ -9,6 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.const import (
     CONF_API_TOKEN,
     CONF_ACCESS_TOKEN,
+    CONF_LOCATION,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_RADIUS,
@@ -136,9 +137,9 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
             hass.async_create_task(
                 coordinator.async_keep_out(
                     imei,
-                    call.data.get(CONF_LATITUDE),
-                    call.data.get(CONF_LONGITUDE),
-                    call.data.get(CONF_RADIUS),
+                    call.data.get(CONF_LOCATION, {}).get(CONF_LATITUDE),
+                    call.data.get(CONF_LOCATION, {}).get(CONF_LONGITUDE),
+                    call.data.get(CONF_LOCATION, {}).get(CONF_RADIUS),
                     call.data.get("hours", None),
                     call.data.get("minutes", None),
                     call.data.get("index", None),
