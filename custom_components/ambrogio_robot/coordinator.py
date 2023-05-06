@@ -34,7 +34,6 @@ from .const import (
     API_DATETIME_FORMAT_DEFAULT,
     API_DATETIME_FORMAT_FALLBACK,
     API_ACK_TIMEOUT,
-    API_WAIT_BEFORE_EXEC,
     CONF_MOWERS,
     CONF_ROBOT_NAME,
     CONF_ROBOT_IMEI,
@@ -193,6 +192,45 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
         except AmbrogioRobotApiClientError as exception:
             raise UpdateFailed(exception) from exception
 
+    async def async_prepare_for_command(
+        self,
+        imei: str,
+    ) -> bool:
+        """Prepare lawn mower for incomming command."""
+        try:
+            await self.client.execute(
+                "thing.find",
+                {
+                    "imei": imei,
+                },
+            )
+            response = await self.client.get_response()
+            connected = response.get("connected", False)
+            if connected is True:
+                return True
+            await self.async_wake_up(imei)
+            await asyncio.sleep(5)
+
+            attempt = 0
+            while connected is False and attempt < 31:
+                await self.client.execute(
+                    "thing.find",
+                    {
+                        "imei": imei,
+                    },
+                )
+                response = await self.client.get_response()
+                connected = response.get("connected", False)
+                if connected is True:
+                    return True
+                attempt = attempt + 1
+                await asyncio.sleep(5)
+            raise asyncio.TimeoutError(
+                f"The lawn mower with IMEI {imei} was not available after a long wait"
+            )
+        except Exception as exception:
+            LOGGER.exception(exception)
+
     async def async_wake_up(
         self,
         imei: str,
@@ -220,23 +258,18 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
         """Send command set_profile to lawn nower."""
         LOGGER.debug(f"set_profile: {imei}")
         try:
-            await self.async_wake_up(imei)
-            self._loop.call_later(
-                API_WAIT_BEFORE_EXEC,
-                lambda: asyncio.create_task(
-                    self.client.execute(
-                        "method.exec",
-                        {
-                            "method": "set_profile",
-                            "imei": imei,
-                            "params": {
-                                "profile": (profile - 1),
-                            },
-                            "ackTimeout": API_ACK_TIMEOUT,
-                            "singleton": True,
-                        },
-                    )
-                )
+            await self.async_prepare_for_command(imei)
+            await self.client.execute(
+                "method.exec",
+                {
+                    "method": "set_profile",
+                    "imei": imei,
+                    "params": {
+                        "profile": (profile - 1),
+                    },
+                    "ackTimeout": API_ACK_TIMEOUT,
+                    "singleton": True,
+                },
             )
         except Exception as exception:
             LOGGER.exception(exception)
@@ -252,21 +285,16 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
         if isinstance(area, int) and area in range(1, 10):
             _params["area"] = area - 1
         try:
-            await self.async_wake_up(imei)
-            self._loop.call_later(
-                API_WAIT_BEFORE_EXEC,
-                lambda: asyncio.create_task(
-                    self.client.execute(
-                        "method.exec",
-                        {
-                            "method": "work_now",
-                            "imei": imei,
-                            "params": _params,
-                            "ackTimeout": API_ACK_TIMEOUT,
-                            "singleton": True,
-                        },
-                    )
-                )
+            await self.async_prepare_for_command(imei)
+            await self.client.execute(
+                "method.exec",
+                {
+                    "method": "work_now",
+                    "imei": imei,
+                    "params": _params,
+                    "ackTimeout": API_ACK_TIMEOUT,
+                    "singleton": True,
+                },
             )
         except Exception as exception:
             LOGGER.exception(exception)
@@ -305,21 +333,16 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
         else:
             _params["area"] = 255
         try:
-            await self.async_wake_up(imei)
-            self._loop.call_later(
-                API_WAIT_BEFORE_EXEC,
-                lambda: asyncio.create_task(
-                    self.client.execute(
-                        "method.exec",
-                        {
-                            "method": "work_until",
-                            "imei": imei,
-                            "params": _params,
-                            "ackTimeout": API_ACK_TIMEOUT,
-                            "singleton": True,
-                        },
-                    )
-                )
+            await self.async_prepare_for_command(imei)
+            await self.client.execute(
+                "method.exec",
+                {
+                    "method": "work_until",
+                    "imei": imei,
+                    "params": _params,
+                    "ackTimeout": API_ACK_TIMEOUT,
+                    "singleton": True,
+                },
             )
         except Exception as exception:
             LOGGER.exception(exception)
@@ -331,20 +354,15 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
         """Send command border_cut to lawn nower."""
         LOGGER.debug(f"border_cut: {imei}")
         try:
-            await self.async_wake_up(imei)
-            self._loop.call_later(
-                API_WAIT_BEFORE_EXEC,
-                lambda: asyncio.create_task(
-                    self.client.execute(
-                        "method.exec",
-                        {
-                            "method": "border_cut",
-                            "imei": imei,
-                            "ackTimeout": API_ACK_TIMEOUT,
-                            "singleton": True,
-                        },
-                    )
-                )
+            await self.async_prepare_for_command(imei)
+            await self.client.execute(
+                "method.exec",
+                {
+                    "method": "border_cut",
+                    "imei": imei,
+                    "ackTimeout": API_ACK_TIMEOUT,
+                    "singleton": True,
+                },
             )
         except Exception as exception:
             LOGGER.exception(exception)
@@ -356,20 +374,15 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
         """Send command charge_now to lawn nower."""
         LOGGER.debug(f"charge_now: {imei}")
         try:
-            await self.async_wake_up(imei)
-            self._loop.call_later(
-                API_WAIT_BEFORE_EXEC,
-                lambda: asyncio.create_task(
-                    self.client.execute(
-                        "method.exec",
-                        {
-                            "method": "charge_now",
-                            "imei": imei,
-                            "ackTimeout": API_ACK_TIMEOUT,
-                            "singleton": True,
-                        },
-                    )
-                )
+            await self.async_prepare_for_command(imei)
+            await self.client.execute(
+                "method.exec",
+                {
+                    "method": "charge_now",
+                    "imei": imei,
+                    "ackTimeout": API_ACK_TIMEOUT,
+                    "singleton": True,
+                },
             )
         except Exception as exception:
             LOGGER.exception(exception)
@@ -398,25 +411,20 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
         """Send command charge_until to lawn nower."""
         LOGGER.debug(f"charge_until: {imei}")
         try:
-            await self.async_wake_up(imei)
-            self._loop.call_later(
-                API_WAIT_BEFORE_EXEC,
-                lambda: asyncio.create_task(
-                    self.client.execute(
-                        "method.exec",
-                        {
-                            "method": "charge_until",
-                            "imei": imei,
-                            "params": {
-                                "hh": hours,
-                                "mm": minutes,
-                                "weekday": (weekday - 1),
-                            },
-                            "ackTimeout": API_ACK_TIMEOUT,
-                            "singleton": True,
-                        },
-                    )
-                )
+            await self.async_prepare_for_command(imei)
+            await self.client.execute(
+                "method.exec",
+                {
+                    "method": "charge_until",
+                    "imei": imei,
+                    "params": {
+                        "hh": hours,
+                        "mm": minutes,
+                        "weekday": (weekday - 1),
+                    },
+                    "ackTimeout": API_ACK_TIMEOUT,
+                    "singleton": True,
+                },
             )
         except Exception as exception:
             LOGGER.exception(exception)
@@ -428,20 +436,15 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
         """Send command trace_position to lawn nower."""
         LOGGER.debug(f"trace_position: {imei}")
         try:
-            await self.async_wake_up(imei)
-            self._loop.call_later(
-                API_WAIT_BEFORE_EXEC,
-                lambda: asyncio.create_task(
-                    self.client.execute(
-                        "method.exec",
-                        {
-                            "method": "trace_position",
-                            "imei": imei,
-                            "ackTimeout": API_ACK_TIMEOUT,
-                            "singleton": True,
-                        },
-                    )
-                )
+            await self.async_prepare_for_command(imei)
+            await self.client.execute(
+                "method.exec",
+                {
+                    "method": "trace_position",
+                    "imei": imei,
+                    "ackTimeout": API_ACK_TIMEOUT,
+                    "singleton": True,
+                },
             )
         except Exception as exception:
             LOGGER.exception(exception)
@@ -470,21 +473,16 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
         if isinstance(index, int):
             _params["index"] = index
         try:
-            await self.async_wake_up(imei)
-            self._loop.call_later(
-                API_WAIT_BEFORE_EXEC,
-                lambda: asyncio.create_task(
-                    self.client.execute(
-                        "method.exec",
-                        {
-                            "method": "keep_out",
-                            "imei": imei,
-                            "params": _params,
-                            "ackTimeout": API_ACK_TIMEOUT,
-                            "singleton": True,
-                        },
-                    )
-                )
+            await self.async_prepare_for_command(imei)
+            await self.client.execute(
+                "method.exec",
+                {
+                    "method": "keep_out",
+                    "imei": imei,
+                    "params": _params,
+                    "ackTimeout": API_ACK_TIMEOUT,
+                    "singleton": True,
+                },
             )
         except Exception as exception:
             LOGGER.exception(exception)
@@ -497,21 +495,16 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
     ) -> None:
         """Send custom command to lawn nower."""
         try:
-            await self.async_wake_up(imei)
-            self._loop.call_later(
-                API_WAIT_BEFORE_EXEC,
-                lambda: asyncio.create_task(
-                    self.client.execute(
-                        "method.exec",
-                        {
-                            "method": command,
-                            "imei": imei,
-                            "params": params,
-                            "ackTimeout": API_ACK_TIMEOUT,
-                            "singleton": True,
-                        },
-                    )
-                )
+            await self.async_prepare_for_command(imei)
+            await self.client.execute(
+                "method.exec",
+                {
+                    "method": command,
+                    "imei": imei,
+                    "params": params,
+                    "ackTimeout": API_ACK_TIMEOUT,
+                    "singleton": True,
+                },
             )
         except Exception as exception:
             LOGGER.exception(exception)
