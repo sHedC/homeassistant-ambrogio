@@ -254,12 +254,12 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
         self,
         imei: str,
         profile: int,
-    ) -> None:
+    ) -> bool:
         """Send command set_profile to lawn nower."""
         LOGGER.debug(f"set_profile: {imei}")
         try:
             await self.async_prepare_for_command(imei)
-            await self.client.execute(
+            return await self.client.execute(
                 "method.exec",
                 {
                     "method": "set_profile",
@@ -278,7 +278,7 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
         self,
         imei: str,
         area: int | None = None,
-    ) -> None:
+    ) -> bool:
         """Send command work_now to lawn nower."""
         LOGGER.debug(f"work_now: {imei}")
         _params = {}
@@ -286,7 +286,7 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
             _params["area"] = area - 1
         try:
             await self.async_prepare_for_command(imei)
-            await self.client.execute(
+            return await self.client.execute(
                 "method.exec",
                 {
                     "method": "work_now",
@@ -304,7 +304,7 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
         imei: str,
         duration: int,
         area: int | None = None,
-    ) -> None:
+    ) -> bool:
         """Prepare command work_for."""
         LOGGER.debug(f"work_for: {imei}")
         _target = self._get_datetime_from_duration(duration)
@@ -321,7 +321,7 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
         hours: int,
         minutes: int,
         area: int | None = None,
-    ) -> None:
+    ) -> bool:
         """Send command work_until to lawn nower."""
         LOGGER.debug(f"work_until: {imei}")
         _params = {
@@ -334,7 +334,7 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
             _params["area"] = 255
         try:
             await self.async_prepare_for_command(imei)
-            await self.client.execute(
+            return await self.client.execute(
                 "method.exec",
                 {
                     "method": "work_until",
@@ -350,12 +350,12 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
     async def async_border_cut(
         self,
         imei: str,
-    ) -> None:
+    ) -> bool:
         """Send command border_cut to lawn nower."""
         LOGGER.debug(f"border_cut: {imei}")
         try:
             await self.async_prepare_for_command(imei)
-            await self.client.execute(
+            return await self.client.execute(
                 "method.exec",
                 {
                     "method": "border_cut",
@@ -370,12 +370,12 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
     async def async_charge_now(
         self,
         imei: str,
-    ) -> None:
+    ) -> bool:
         """Send command charge_now to lawn nower."""
         LOGGER.debug(f"charge_now: {imei}")
         try:
             await self.async_prepare_for_command(imei)
-            await self.client.execute(
+            return await self.client.execute(
                 "method.exec",
                 {
                     "method": "charge_now",
@@ -391,7 +391,7 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
         self,
         imei: str,
         duration: int,
-    ) -> None:
+    ) -> bool:
         """Prepare command charge_until."""
         _target = self._get_datetime_from_duration(duration)
         await self.async_charge_until(
@@ -407,12 +407,12 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
         hours: int,
         minutes: int,
         weekday: int,
-    ) -> None:
+    ) -> bool:
         """Send command charge_until to lawn nower."""
         LOGGER.debug(f"charge_until: {imei}")
         try:
             await self.async_prepare_for_command(imei)
-            await self.client.execute(
+            return await self.client.execute(
                 "method.exec",
                 {
                     "method": "charge_until",
@@ -432,12 +432,12 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
     async def async_trace_position(
         self,
         imei: str,
-    ) -> None:
+    ) -> bool:
         """Send command trace_position to lawn nower."""
         LOGGER.debug(f"trace_position: {imei}")
         try:
             await self.async_prepare_for_command(imei)
-            await self.client.execute(
+            return await self.client.execute(
                 "method.exec",
                 {
                     "method": "trace_position",
@@ -458,7 +458,7 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
         hours: int | None = None,
         minutes: int | None = None,
         index: int | None = None,
-    ) -> None:
+    ) -> bool:
         """Send command keep_out to lawn nower."""
         LOGGER.debug(f"keep_out: {imei}")
         _params = {
@@ -474,7 +474,7 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
             _params["index"] = index
         try:
             await self.async_prepare_for_command(imei)
-            await self.client.execute(
+            return await self.client.execute(
                 "method.exec",
                 {
                     "method": "keep_out",
@@ -492,11 +492,11 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
         imei: str,
         command: str,
         params: dict[str, any] | list[any] | None = None,
-    ) -> None:
+    ) -> bool:
         """Send custom command to lawn nower."""
         try:
             await self.async_prepare_for_command(imei)
-            await self.client.execute(
+            return await self.client.execute(
                 "method.exec",
                 {
                     "method": command,
