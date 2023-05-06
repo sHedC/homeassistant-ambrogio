@@ -374,6 +374,20 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
         except Exception as exception:
             LOGGER.exception(exception)
 
+    async def async_charge_for(
+        self,
+        imei: str,
+        duration: int,
+    ) -> None:
+        """Prepare command charge_until."""
+        _target = self._get_datetime_from_duration(duration)
+        await self.async_charge_until(
+            imei=imei,
+            hours=_target.hour,
+            minutes=_target.minute,
+            weekday=_target.weekday(),
+        )
+
     async def async_charge_until(
         self,
         imei: str,
