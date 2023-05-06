@@ -29,7 +29,8 @@ from .api import (
 from .const import (
     DOMAIN,
     LOGGER,
-    API_DATETIME_FORMAT,
+    API_DATETIME_FORMAT_DEFAULT,
+    API_DATETIME_FORMAT_FALLBACK,
     API_ACK_TIMEOUT,
     API_WAIT_BEFORE_EXEC,
     CONF_MOWERS,
@@ -66,6 +67,16 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
 
         self._loop = asyncio.get_event_loop()
 
+    def _convert_datetime_from_api(
+        self,
+        date_string: str,
+    ) -> datetime:
+        """Convert datetime string from API data into datetime object."""
+        try:
+            return datetime.strptime(date_string, API_DATETIME_FORMAT_DEFAULT)
+        except ValueError:
+            return datetime.strptime(date_string, API_DATETIME_FORMAT_FALLBACK)
+
     async def __aenter__(self):
         """Return Self."""
         return self
@@ -77,11 +88,11 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self):
         """Update data via library."""
         try:
-            robot_data = {CONF_MOWERS: {}}
+            robot_data = {}
             robot_imeis = []
             for robot_imei, robot_name in self.robots.items():
                 robot_imeis.append(robot_imei)
-                robot_data[CONF_MOWERS][robot_imei] = {
+                robot_data[robot_imei] = {
                     CONF_ROBOT_NAME: robot_name,
                     CONF_ROBOT_IMEI: robot_imei,
                     ATTR_SERIAL: None,
@@ -124,38 +135,38 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
                 for robot in (
                     robot
                     for robot in result_list
-                    if "key" in robot and robot["key"] in robot_data[CONF_MOWERS]
+                    if "key" in robot and robot["key"] in robot_data
                 ):
                     if "alarms" in robot and "robot_state" in robot["alarms"]:
                         robot_state = robot["alarms"]["robot_state"]
-                        robot_data[CONF_MOWERS][robot["key"]][ATTR_STATE] = robot_state[
+                        robot_data[robot["key"]][ATTR_STATE] = robot_state[
                             "state"
                         ]
                         if "msg" in robot_state:
-                            robot_data[CONF_MOWERS][robot["key"]][ATTR_ERROR] = int(robot_state[
+                            robot_data[robot["key"]][ATTR_ERROR] = int(robot_state[
                                 "msg"
                             ])
                         # latitude and longitude, not always available
                         if "lat" in robot_state and "lng" in robot_state:
-                            robot_data[CONF_MOWERS][robot["key"]][ATTR_LOCATION] = {
+                            robot_data[robot["key"]][ATTR_LOCATION] = {
                                 ATTR_LATITUDE: robot_state["lat"],
                                 ATTR_LONGITUDE: robot_state["lng"],
                             }
                     if "attrs" in robot:
                         if "robot_serial" in robot["attrs"]:
-                            robot_data[CONF_MOWERS][robot["key"]][ATTR_SERIAL] = robot["attrs"]["robot_serial"][
+                            robot_data[robot["key"]][ATTR_SERIAL] = robot["attrs"]["robot_serial"][
                                 "value"
                             ]
                         if "program_version" in robot["attrs"]:
-                            robot_data[CONF_MOWERS][robot["key"]][ATTR_SW_VERSION] = robot["attrs"]["program_version"][
+                            robot_data[robot["key"]][ATTR_SW_VERSION] = robot["attrs"]["program_version"][
                                 "value"
                             ]
                     if "connected" in robot:
-                        robot_data[CONF_MOWERS][robot["key"]][ATTR_CONNECTED] = robot["connected"]
+                        robot_data[robot["key"]][ATTR_CONNECTED] = robot["connected"]
                     if "lastCommunication" in robot:
-                        robot_data[CONF_MOWERS][robot["key"]][ATTR_LAST_COMM] = datetime.strptime(robot["lastCommunication"], API_DATETIME_FORMAT)
+                        robot_data[robot["key"]][ATTR_LAST_COMM] = self._convert_datetime_from_api(robot["lastCommunication"])
                     if "lastSeen" in robot:
-                        robot_data[CONF_MOWERS][robot["key"]][ATTR_LAST_SEEN] = datetime.strptime(robot["lastSeen"], API_DATETIME_FORMAT)
+                        robot_data[robot["key"]][ATTR_LAST_SEEN] = self._convert_datetime_from_api(robot["lastSeen"])
 
             # TODO
             LOGGER.debug("_async_update_data")
@@ -163,7 +174,9 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
 
             self.robot_data = robot_data
 
-            return self.robot_data
+            return {
+                CONF_MOWERS: self.robot_data,
+            }
         except AmbrogioRobotApiClientAuthenticationError as exception:
             raise ConfigEntryAuthFailed(exception) from exception
         except AmbrogioRobotApiClientError as exception:
@@ -220,9 +233,13 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
     async def async_work_now(
         self,
         imei: str,
+        area: int | None = None,
     ) -> None:
         """Send command work_now to lawn nower."""
         LOGGER.debug(f"work_now: {imei}")
+        _params = {}
+        if isinstance(area, int) and hours in range(0, 23):
+            _params["area"] = area - 1
         try:
             await self.async_wake_up(imei)
             self._loop.call_later(
@@ -233,6 +250,7 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
                         {
                             "method": "work_now",
                             "imei": imei,
+                            "params": _params,
                             "ackTimeout": API_ACK_TIMEOUT,
                             "singleton": True,
                         },
@@ -245,12 +263,20 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
     async def async_work_until(
         self,
         imei: str,
-        area: int,
         hours: int,
         minutes: int,
+        area: int | None = None,
     ) -> None:
         """Send command work_until to lawn nower."""
         LOGGER.debug(f"work_until: {imei}")
+        _params = {
+            "hh": hours,
+            "mm": minutes,
+        }
+        if isinstance(area, int) and area in range(1, 10):
+            _params["area"] = area - 1
+        else:
+            _params["area"] = 255
         try:
             await self.async_wake_up(imei)
             self._loop.call_later(
@@ -261,11 +287,7 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
                         {
                             "method": "work_until",
                             "imei": imei,
-                            "params": {
-                                "area": (area - 1),
-                                "hh": hours,
-                                "mm": minutes,
-                            },
+                            "params": _params,
                             "ackTimeout": API_ACK_TIMEOUT,
                             "singleton": True,
                         },
