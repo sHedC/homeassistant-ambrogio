@@ -187,29 +187,35 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
         data: dict[str, any],
     ) -> None:
         """Update a single mower."""
+        this_mower = self.mower_data.get(data["key"], None)
+        if this_mower is None:
+            return None
+        # Start refreshing mower in coordinator from fetched API data
         if "alarms" in data and "robot_state" in data["alarms"]:
             robot_state = data["alarms"]["robot_state"]
-            self.mower_data[data["key"]][ATTR_STATE] = robot_state["state"]
-            self.mower_data[data["key"]][ATTR_WORKING] = robot_state["state"] in list(ROBOT_WORKING_STATES)
+            this_mower[ATTR_STATE] = robot_state["state"]
+            this_mower[ATTR_WORKING] = robot_state["state"] in list(ROBOT_WORKING_STATES)
             if "msg" in robot_state:
-                self.mower_data[data["key"]][ATTR_ERROR] = int(robot_state["msg"])
+                this_mower[ATTR_ERROR] = int(robot_state["msg"])
             # latitude and longitude, not always available
             if "lat" in robot_state and "lng" in robot_state:
-                self.mower_data[data["key"]][ATTR_LOCATION] = {
+                this_mower[ATTR_LOCATION] = {
                     ATTR_LATITUDE: robot_state["lat"],
                     ATTR_LONGITUDE: robot_state["lng"],
                 }
         if "attrs" in data:
             if "robot_serial" in data["attrs"]:
-                self.mower_data[data["key"]][ATTR_SERIAL] = data["attrs"]["robot_serial"]["value"]
+                this_mower[ATTR_SERIAL] = data["attrs"]["robot_serial"]["value"]
             if "program_version" in data["attrs"]:
-                self.mower_data[data["key"]][ATTR_SW_VERSION] = data["attrs"]["program_version"]["value"]
+                this_mower[ATTR_SW_VERSION] = data["attrs"]["program_version"]["value"]
         if "connected" in data:
-            self.mower_data[data["key"]][ATTR_CONNECTED] = data["connected"]
+            this_mower[ATTR_CONNECTED] = data["connected"]
         if "lastCommunication" in data:
-            self.mower_data[data["key"]][ATTR_LAST_COMM] = self._convert_datetime_from_api(data["lastCommunication"])
+            this_mower[ATTR_LAST_COMM] = self._convert_datetime_from_api(data["lastCommunication"])
         if "lastSeen" in data:
-            self.mower_data[data["key"]][ATTR_LAST_SEEN] = self._convert_datetime_from_api(data["lastSeen"])
+            this_mower[ATTR_LAST_SEEN] = self._convert_datetime_from_api(data["lastSeen"])
+
+        self.mower_data[data["key"]] = this_mower
 
     async def async_get_single_mower(
         self,
