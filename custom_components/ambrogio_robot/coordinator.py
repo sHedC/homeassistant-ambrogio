@@ -64,7 +64,7 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
         self.client = client
 
         self.mower_data = {}
-        for robot_imei, robot_name in self.mowers.items():
+        for robot_imei, robot_name in self.robots.items():
             self.mower_data[robot_imei] = {
                 CONF_ROBOT_NAME: robot_name,
                 CONF_ROBOT_IMEI: robot_imei,
