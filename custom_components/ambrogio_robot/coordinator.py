@@ -2,12 +2,13 @@
 from __future__ import annotations
 
 import asyncio
+import pytz
 
 from datetime import (
     timedelta,
     datetime,
+    timezone,
 )
-from pytz import timezone
 
 from homeassistant.core import HomeAssistant
 from homeassistant.const import (
@@ -44,6 +45,9 @@ from .const import (
     ATTR_CONNECTED,
     ATTR_LAST_COMM,
     ATTR_LAST_SEEN,
+    ATTR_LAST_PULL,
+    ATTR_LAST_STATE,
+    ATTR_LAST_WAKE_UP,
     ROBOT_WORKING_STATES,
 )
 
@@ -82,6 +86,9 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
                 ATTR_CONNECTED: False,
                 ATTR_LAST_COMM: None,
                 ATTR_LAST_SEEN: None,
+                ATTR_LAST_PULL: None,
+                ATTR_LAST_STATE: 0,
+                ATTR_LAST_WAKE_UP: None,
             }
         self.update_single_mower = None
 
@@ -102,7 +109,7 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
         duration: int,
     ) -> datetime:
         """Get datetime object by adding a duration to the current time."""
-        locale_timezone = timezone(str(self.hass.config.time_zone))
+        locale_timezone = pytz.timezone(str(self.hass.config.time_zone))
         datetime_now = datetime.utcnow().astimezone(locale_timezone)
         return datetime_now + timedelta(minutes=duration)
 
@@ -247,6 +254,7 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
             this_mower[ATTR_LAST_COMM] = self._convert_datetime_from_api(data["lastCommunication"])
         if "lastSeen" in data:
             this_mower[ATTR_LAST_SEEN] = self._convert_datetime_from_api(data["lastSeen"])
+        this_mower[ATTR_LAST_PULL] = datetime.utcnow().replace(tzinfo=timezone.utc)
 
         self.mower_data[data["key"]] = this_mower
 
