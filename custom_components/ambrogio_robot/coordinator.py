@@ -34,7 +34,6 @@ from .const import (
     API_DATETIME_FORMAT_DEFAULT,
     API_DATETIME_FORMAT_FALLBACK,
     API_ACK_TIMEOUT,
-    CONF_MOWERS,
     CONF_ROBOT_NAME,
     CONF_ROBOT_IMEI,
     ATTR_SERIAL,
@@ -65,6 +64,19 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
         self.client = client
 
         self.mower_data = {}
+        for robot_imei, robot_name in self.mowers.items():
+            self.mower_data[robot_imei] = {
+                CONF_ROBOT_NAME: robot_name,
+                CONF_ROBOT_IMEI: robot_imei,
+                ATTR_SERIAL: None,
+                ATTR_SW_VERSION: None,
+                ATTR_STATE: 0,
+                ATTR_ERROR: 0,
+                ATTR_LOCATION: None,
+                ATTR_CONNECTED: False,
+                ATTR_LAST_COMM: None,
+                ATTR_LAST_SEEN: None,
+            }
         self.update_single_mower = None
 
         self._loop = asyncio.get_event_loop()
@@ -99,103 +111,94 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self):
         """Update data via library."""
         try:
-            if self.update_single_mower is not None:
+            """Update only onw mower."""
+            if isinstance(self.update_single_mower, dict):
+                await self.async_update_single_mower(self.update_single_mower)
                 self.update_single_mower = None
-                return
+                return self.mower_data
 
-            mower_data = {}
-            robot_imeis = []
-            for robot_imei, robot_name in self.robots.items():
-                robot_imeis.append(robot_imei)
-                mower_data[robot_imei] = {
-                    CONF_ROBOT_NAME: robot_name,
-                    CONF_ROBOT_IMEI: robot_imei,
-                    ATTR_SERIAL: None,
-                    ATTR_SW_VERSION: None,
-                    ATTR_STATE: 0,
-                    ATTR_ERROR: 0,
-                    ATTR_LOCATION: None,
-                    ATTR_CONNECTED: False,
-                    ATTR_LAST_COMM: None,
-                    ATTR_LAST_SEEN: None,
-                }
-            if len(robot_imeis) == 0:
-                return mower_data
-
-            await self.client.execute(
-                "thing.list",
-                {
-                    "show": [
-                        "id",
-                        "key",
-                        "name",
-                        "connected",
-                        "lastSeen",
-                        "lastCommunication",
-                        "loc",
-                        "properties",
-                        "alarms",
-                        "attrs",
-                        "createdOn",
-                        "storage",
-                        "varBillingPlanCode",
-                    ],
-                    "hideFields": True,
-                    "keys": robot_imeis,
-                },
-            )
-            response = await self.client.get_response()
-            if "result" in response:
-                result_list = response["result"]
-                for robot in (
-                    robot
-                    for robot in result_list
-                    if "key" in robot and robot["key"] in mower_data
-                ):
-                    if "alarms" in robot and "robot_state" in robot["alarms"]:
-                        robot_state = robot["alarms"]["robot_state"]
-                        mower_data[robot["key"]][ATTR_STATE] = robot_state[
-                            "state"
-                        ]
-                        if "msg" in robot_state:
-                            mower_data[robot["key"]][ATTR_ERROR] = int(robot_state[
-                                "msg"
-                            ])
-                        # latitude and longitude, not always available
-                        if "lat" in robot_state and "lng" in robot_state:
-                            mower_data[robot["key"]][ATTR_LOCATION] = {
-                                ATTR_LATITUDE: robot_state["lat"],
-                                ATTR_LONGITUDE: robot_state["lng"],
-                            }
-                    if "attrs" in robot:
-                        if "robot_serial" in robot["attrs"]:
-                            mower_data[robot["key"]][ATTR_SERIAL] = robot["attrs"]["robot_serial"][
-                                "value"
-                            ]
-                        if "program_version" in robot["attrs"]:
-                            mower_data[robot["key"]][ATTR_SW_VERSION] = robot["attrs"]["program_version"][
-                                "value"
-                            ]
-                    if "connected" in robot:
-                        mower_data[robot["key"]][ATTR_CONNECTED] = robot["connected"]
-                    if "lastCommunication" in robot:
-                        mower_data[robot["key"]][ATTR_LAST_COMM] = self._convert_datetime_from_api(robot["lastCommunication"])
-                    if "lastSeen" in robot:
-                        mower_data[robot["key"]][ATTR_LAST_SEEN] = self._convert_datetime_from_api(robot["lastSeen"])
+            """Update all mowers."""
+            await self.async_update_all_mowers()
 
             # TODO
             LOGGER.debug("_async_update_data")
-            LOGGER.debug(mower_data)
+            LOGGER.debug(self.mower_data)
 
-            self.mower_data = mower_data
-
-            return {
-                CONF_MOWERS: self.mower_data,
-            }
-        except AmbrogioRobotApiClientAuthenticationError as exception:
+            return self.mower_data
+        except AmbrogioRobotApiAuthenticationError as exception:
             raise ConfigEntryAuthFailed(exception) from exception
-        except AmbrogioRobotApiClientError as exception:
+        except AmbrogioRobotApiError as exception:
             raise UpdateFailed(exception) from exception
+
+    async def async_update_all_mowers(
+        self,
+    ) -> None:
+        """Update all mowers."""
+        mower_imeis = list(self.mower_data.keys())
+        if len(mower_imeis) == 0:
+            return None
+
+        await self.client.execute(
+            "thing.list",
+            {
+                "show": [
+                    "id",
+                    "key",
+                    "name",
+                    "connected",
+                    "lastSeen",
+                    "lastCommunication",
+                    "loc",
+                    "properties",
+                    "alarms",
+                    "attrs",
+                    "createdOn",
+                    "storage",
+                    "varBillingPlanCode"
+                ],
+                "hideFields": True,
+                "keys": mower_imeis
+            },
+        )
+        response = await self.client.get_response()
+        if "result" in response:
+            result_list = response["result"]
+            for mower in (
+                mower
+                for mower in result_list
+                if "key" in mower and mower["key"] in self.mower_data
+            ):
+                await self.async_update_single_mower(mower)
+
+    async def async_update_single_mower(
+        self,
+        data: dict[str, any],
+    ) -> None:
+        """Update a single mower."""
+        if "alarms" in data and "robot_state" in data["alarms"]:
+            robot_state = data["alarms"]["robot_state"]
+            self.mower_data[data["key"]][ATTR_STATE] = robot_state["state"]
+            if "msg" in robot_state:
+                self.mower_data[data["key"]][ATTR_ERROR] = int(
+                    robot_state["msg"]
+                )
+            # latitude and longitude, not always available
+            if "lat" in robot_state and "lng" in robot_state:
+                self.mower_data[data["key"]][ATTR_LOCATION] = {
+                    ATTR_LATITUDE: robot_state["lat"],
+                    ATTR_LONGITUDE: robot_state["lng"],
+                }
+        if "attrs" in data:
+            if "robot_serial" in data["attrs"]:
+                self.mower_data[data["key"]][ATTR_SERIAL] = data["attrs"]["robot_serial"]["value"]
+            if "program_version" in data["attrs"]:
+                self.mower_data[data["key"]][ATTR_SW_VERSION] = data["attrs"]["program_version"]["value"]
+        if "connected" in data:
+            self.mower_data[data["key"]][ATTR_CONNECTED] = data["connected"]
+        if "lastCommunication" in data:
+            self.mower_data[data["key"]][ATTR_LAST_COMM] = self._convert_datetime_from_api(data["lastCommunication"])
+        if "lastSeen" in data:
+            self.mower_data[data["key"]][ATTR_LAST_SEEN] = self._convert_datetime_from_api(data["lastSeen"])
 
     async def async_get_single_mower(
         self,

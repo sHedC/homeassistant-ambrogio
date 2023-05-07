@@ -24,7 +24,6 @@ from .const import (
     #LOGGER,
     DOMAIN,
     MANUFACTURER,
-    CONF_MOWERS,
     CONF_ROBOT_IMEI,
     ATTR_SERIAL,
     ATTR_ERROR,
@@ -138,8 +137,8 @@ class AmbrogioRobotEntity(CoordinatorEntity):
         self.async_write_ha_state()
 
     def _update_handler(self):
-        if self._robot_imei in self.coordinator.data[CONF_MOWERS]:
-            robot = self.coordinator.data[CONF_MOWERS][self._robot_imei]
+        if self._robot_imei in self.coordinator.data:
+            robot = self.coordinator.data[self._robot_imei]
             self._state = robot[ATTR_STATE] if robot[ATTR_STATE] < len(ROBOT_STATES) else 0
             self._error = robot[ATTR_ERROR]
             self._available = self._state > 0
