@@ -49,9 +49,11 @@ from .const import (
     ATTR_LAST_STATE,
     ATTR_LAST_WAKE_UP,
     ROBOT_WORKING_STATES,
+    ROBOT_WAKE_UP_INTERVAL,
 )
 
 
+# https://developers.home-assistant.io/docs/integration_fetching_data#coordinated-single-api-poll-for-data-for-all-entities
 class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching data from the API."""
 
@@ -104,6 +106,10 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
         except ValueError:
             return datetime.strptime(date_string, API_DATETIME_FORMAT_FALLBACK)
 
+    def _get_datetime_now(self) -> datetime:
+        """Get current datetime in UTC."""
+        return datetime.utcnow().replace(tzinfo=timezone.utc)
+
     def _get_datetime_from_duration(
         self,
         duration: int,
@@ -125,8 +131,8 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
         """Update data via library."""
         try:
             if isinstance(self.update_single_mower, dict):
-                """Update only onw mower."""
-                await self.async_update_single_mower(self.update_single_mower)
+                """Update only one mower."""
+                await self.async_update_mower(self.update_single_mower)
                 self.update_single_mower = None
             else:
                 """Update all mowers."""
@@ -136,10 +142,12 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
             LOGGER.debug("_async_update_data")
             LOGGER.debug(self.mower_data)
 
-            if self.async_has_working_mowers():
+            # If one or more lawn mower(s) working, increase update_interval
+            if self.has_working_mowers():
                 suggested_update_interval = timedelta(seconds=UPDATE_INTERVAL_WORKING)
             else:
                 suggested_update_interval = timedelta(seconds=UPDATE_INTERVAL_DEFAULT)
+            # Set suggested update_interval
             if suggested_update_interval != self.update_interval:
                 self.update_interval = suggested_update_interval
                 LOGGER.info("Update update_interval, because lawn mower(s) changed state from not working to working or vice versa.")
@@ -149,14 +157,14 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
         except AmbrogioRobotApiClientError as exception:
             raise UpdateFailed(exception) from exception
 
-    async def async_get_mower_attributes(
+    def get_mower_attributes(
         self,
         imei: str,
     ) -> dict[str, any] | None:
         """Get attributes of an given lawn mower."""
         return self.mower_data.get(imei, None)
 
-    async def async_has_working_mowers(
+    def has_working_mowers(
         self,
     ) -> bool:
         """Count the working lawn mowers."""
@@ -201,7 +209,7 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
                 for mower in result_list
                 if "key" in mower and mower["key"] in self.mower_data
             ):
-                await self.async_update_single_mower(mower)
+                await self.async_update_mower(mower)
 
     async def async_fetch_single_mower(
         self,
@@ -222,41 +230,65 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
         )
         return connected
 
-    async def async_update_single_mower(
+    async def async_update_mower(
         self,
         data: dict[str, any],
     ) -> None:
         """Update a single mower."""
-        this_mower = self.async_get_mower_attributes(data["key"])
-        if this_mower is None:
+        imei = data.get("key", "")
+        mower = self.get_mower_attributes(imei)
+        if mower is None:
             return None
         # Start refreshing mower in coordinator from fetched API data
         if "alarms" in data and "robot_state" in data["alarms"]:
             robot_state = data["alarms"]["robot_state"]
-            this_mower[ATTR_STATE] = robot_state["state"]
-            this_mower[ATTR_WORKING] = robot_state["state"] in list(ROBOT_WORKING_STATES)
+            mower[ATTR_STATE] = robot_state["state"]
+            mower[ATTR_WORKING] = robot_state["state"] in list(ROBOT_WORKING_STATES)
+            # msg not always available
             if "msg" in robot_state:
-                this_mower[ATTR_ERROR] = int(robot_state["msg"])
-            # latitude and longitude, not always available
+                mower[ATTR_ERROR] = int(robot_state["msg"])
+            # latitude and longitude not always available
             if "lat" in robot_state and "lng" in robot_state:
-                this_mower[ATTR_LOCATION] = {
+                mower[ATTR_LOCATION] = {
                     ATTR_LATITUDE: robot_state["lat"],
                     ATTR_LONGITUDE: robot_state["lng"],
                 }
         if "attrs" in data:
+            # In some cases, robot_serial is not available
             if "robot_serial" in data["attrs"]:
-                this_mower[ATTR_SERIAL] = data["attrs"]["robot_serial"]["value"]
+                mower[ATTR_SERIAL] = data["attrs"]["robot_serial"]["value"]
+            # In some cases, program_version is not available
             if "program_version" in data["attrs"]:
-                this_mower[ATTR_SW_VERSION] = data["attrs"]["program_version"]["value"]
-        if "connected" in data:
-            this_mower[ATTR_CONNECTED] = data["connected"]
+                mower[ATTR_SW_VERSION] = data["attrs"]["program_version"]["value"]
+        mower[ATTR_CONNECTED] = data.get("connected", False)
         if "lastCommunication" in data:
-            this_mower[ATTR_LAST_COMM] = self._convert_datetime_from_api(data["lastCommunication"])
+            mower[ATTR_LAST_COMM] = self._convert_datetime_from_api(data["lastCommunication"])
         if "lastSeen" in data:
-            this_mower[ATTR_LAST_SEEN] = self._convert_datetime_from_api(data["lastSeen"])
-        this_mower[ATTR_LAST_PULL] = datetime.utcnow().replace(tzinfo=timezone.utc)
+            mower[ATTR_LAST_SEEN] = self._convert_datetime_from_api(data["lastSeen"])
+        mower[ATTR_LAST_PULL] = self._get_datetime_now()
 
-        self.mower_data[data["key"]] = this_mower
+        # If lawn mower is working send a wake_up command every ROBOT_WAKE_UP_INTERVAL seconds
+        if (
+            mower.get(ATTR_STATE) in ROBOT_WORKING_STATES
+            and (
+                mower.get(ATTR_LAST_WAKE_UP) is None
+                or (self._get_datetime_now() - mower.get(ATTR_LAST_WAKE_UP)).total_seconds() > ROBOT_WAKE_UP_INTERVAL
+            )
+        ):
+            self.hass.async_create_task(
+                self.async_wake_up(imei)
+            )
+        # State changed
+        if mower.get(ATTR_STATE) != mower.get(ATTR_LAST_STATE):
+            # If lawn mower is now working send trace_position command
+            if mower.get(ATTR_STATE) in ROBOT_WORKING_STATES:
+                self.hass.async_create_task(
+                    self.async_trace_position(imei)
+                )
+            # Set new state to last stateus
+            mower[ATTR_LAST_STATE] = mower.get(ATTR_STATE)
+
+        self.mower_data[imei] = mower
 
     async def async_prepare_for_command(
         self,
@@ -265,19 +297,27 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
         """Prepare lawn mower for incomming command."""
         try:
             # Use connection state from last fetch if last pull was not longer than 10 seconds ago
-            this_mower = self.async_get_mower_attributes(imei)
-            last_pull = this_mower.get(ATTR_LAST_PULL, None)
+            mower = self.get_mower_attributes(imei)
+            last_pull = mower.get(ATTR_LAST_PULL, None)
             if (
                 last_pull is not None
-                and (datetime.utcnow().replace(tzinfo=timezone.utc) - last_pull).total_seconds() < 10
-                and this_mower.get(ATTR_CONNECTED, False)
+                and (self._get_datetime_now() - last_pull).total_seconds() < 10
+                and mower.get(ATTR_CONNECTED, False)
             ):
                 return True
+
             # Fetch connection state fresh from API
             connected = await self.async_fetch_single_mower(imei)
             if connected is True:
                 return True
-            await self.async_wake_up(imei)
+
+            # Send wake up command if last attempt was more than 60 seconds ago
+            if (mower.get(ATTR_LAST_WAKE_UP) is None
+                or (self._get_datetime_now() - mower.get(ATTR_LAST_WAKE_UP)).total_seconds() > 60
+            ):
+                await self.async_wake_up(imei)
+
+            # Wait 5 seconds before the loop starts
             await asyncio.sleep(5)
 
             attempt = 0
@@ -286,6 +326,7 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
                 if connected is True:
                     return True
                 attempt = attempt + 1
+                # Wait 5 seconds before next attempt
                 await asyncio.sleep(5)
             raise asyncio.TimeoutError(
                 f"The lawn mower with IMEI {imei} was not available after a long wait"
@@ -300,6 +341,7 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
         """Send command wake_up to lawn nower."""
         LOGGER.debug(f"wake_up: {imei}")
         try:
+            self.mower_data[imei][ATTR_LAST_WAKE_UP] = self._get_datetime_now()
             return await self.client.execute(
                 "sms.send",
                 {
