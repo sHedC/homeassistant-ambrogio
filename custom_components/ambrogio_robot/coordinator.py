@@ -137,9 +137,9 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
                 self.update_interval = suggested_update_interval
                 LOGGER.info("Update update_interval, because lawn mower(s) changed state from not working to working or vice versa.")
             return self.mower_data
-        except AmbrogioRobotApiAuthenticationError as exception:
+        except AmbrogioRobotApiClientAuthenticationError as exception:
             raise ConfigEntryAuthFailed(exception) from exception
-        except AmbrogioRobotApiError as exception:
+        except AmbrogioRobotApiClientError as exception:
             raise UpdateFailed(exception) from exception
 
     async def async_update_all_mowers(
