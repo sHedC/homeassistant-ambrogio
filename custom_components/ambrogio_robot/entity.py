@@ -26,6 +26,7 @@ from .const import (
     MANUFACTURER,
     CONF_ROBOT_IMEI,
     ATTR_SERIAL,
+    ATTR_WORKING,
     ATTR_ERROR,
     ATTR_CONNECTED,
     ATTR_LAST_COMM,
@@ -64,6 +65,7 @@ class AmbrogioRobotEntity(CoordinatorEntity):
         self._attr_unique_id = slugify(f"{robot_name}_{entity_key}")
 
         self._state = 0
+        self._working = False
         self._error = 0
         self._available = True
         self._location = {
@@ -137,23 +139,27 @@ class AmbrogioRobotEntity(CoordinatorEntity):
         self.async_write_ha_state()
 
     def _update_handler(self):
-        if self._robot_imei in self.coordinator.data:
-            robot = self.coordinator.data[self._robot_imei]
-            self._state = robot[ATTR_STATE] if robot[ATTR_STATE] < len(ROBOT_STATES) else 0
-            self._error = robot[ATTR_ERROR]
-            self._available = self._state > 0
-            if robot[ATTR_LOCATION] is not None:
-                self._location = robot[ATTR_LOCATION]
-            self._serial = robot[ATTR_SERIAL]
-            if (
-                self._serial is not None
-                and len(self._serial) > 5
-            ):
-                self._model = self._serial[0:6]
-            self._sw_version = robot[ATTR_SW_VERSION]
+        """Handle updated data."""
+        if self._robot_imei not in self.coordinator.data:
+            return None
+        # Get this mower entity from coordinator
+        robot = self.coordinator.data[self._robot_imei]
+        self._state = robot[ATTR_STATE] if robot[ATTR_STATE] < len(ROBOT_STATES) else 0
+        self._working = robot[ATTR_WORKING]
+        self._error = robot[ATTR_ERROR]
+        self._available = self._state > 0
+        if robot[ATTR_LOCATION] is not None:
+            self._location = robot[ATTR_LOCATION]
+        self._serial = robot[ATTR_SERIAL]
+        if (
+            self._serial is not None
+            and len(self._serial) > 5
+        ):
+            self._model = self._serial[0:6]
+        self._sw_version = robot[ATTR_SW_VERSION]
 
-            self._connected = robot[ATTR_CONNECTED]
-            self._last_communication = robot[ATTR_LAST_COMM]
-            self._last_seen = robot[ATTR_LAST_SEEN]
-            self._last_pull = datetime.utcnow().replace(tzinfo=timezone.utc)
-            self._update_extra_state_attributes()
+        self._connected = robot[ATTR_CONNECTED]
+        self._last_communication = robot[ATTR_LAST_COMM]
+        self._last_seen = robot[ATTR_LAST_SEEN]
+        self._last_pull = datetime.utcnow().replace(tzinfo=timezone.utc)
+        self._update_extra_state_attributes()
