@@ -12,29 +12,21 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.device_registry import async_get
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
     DOMAIN,
     CONF_MOWERS,
-    SERVICE_SET_PROFILE,
-    SERVICE_SET_PROFILE_SCHEMA,
-    SERVICE_WORK_UNTIL,
-    SERVICE_WORK_UNTIL_SCHEMA,
-    SERVICE_BORDER_CUT,
-    SERVICE_BORDER_CUT_SCHEMA,
-    SERVICE_CHARGE_UNTIL,
-    SERVICE_CHARGE_UNTIL_SCHEMA,
-    SERVICE_TRACE_POSITION,
-    SERVICE_TRACE_POSITION_SCHEMA,
 )
+from .services import async_setup_services
 from .api import AmbrogioRobotApiClient
 from .coordinator import AmbrogioDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
     Platform.DEVICE_TRACKER,
     Platform.SENSOR,
+    Platform.VACUUM,
 ]
 
 
@@ -42,115 +34,8 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Set up  ZCS Lawn Mower Robot component."""
     hass.data.setdefault(DOMAIN, {})
 
-    async def async_handle_set_profile(call) -> None:
-        """Handle the service call."""
-        targets = await async_handle_service(call)
-        for imei, coordinator in targets.items():
-            hass.async_create_task(
-                coordinator.async_set_profile(
-                    imei,
-                    call.data.get("profile"),
-                )
-            )
+    await async_setup_services(hass)
 
-    async def async_handle_work_until(call) -> None:
-        """Handle the service call."""
-        targets = await async_handle_service(call)
-        for imei, coordinator in targets.items():
-            hass.async_create_task(
-                coordinator.async_work_until(
-                    imei,
-                    call.data.get("area"),
-                    call.data.get("hours"),
-                    call.data.get("minutes"),
-                )
-            )
-
-    async def async_handle_border_cut(call) -> None:
-        """Handle the service call."""
-        targets = await async_handle_service(call)
-        for imei, coordinator in targets.items():
-            hass.async_create_task(
-                coordinator.async_border_cut(
-                    imei,
-                )
-            )
-
-    async def async_handle_charge_until(call) -> None:
-        """Handle the service call."""
-        targets = await async_handle_service(call)
-        for imei, coordinator in targets.items():
-            hass.async_create_task(
-                coordinator.async_charge_until(
-                    imei,
-                    call.data.get("hours"),
-                    call.data.get("minutes"),
-                    call.data.get("weekday"),
-                )
-            )
-
-    async def async_handle_trace_position(call) -> None:
-        """Handle the service call."""
-        targets = await async_handle_service(call)
-        for imei, coordinator in targets.items():
-            hass.async_create_task(
-                coordinator.async_trace_position(
-                    imei,
-                )
-            )
-
-    async def async_handle_service(call) -> dict[str, any]:
-        data = {**call.data}
-        device_ids = data.pop("device_id", [])
-        if isinstance(device_ids, str):
-            device_ids = [device_ids]
-        device_ids = set(device_ids)
-
-        targets = {}
-        dr = async_get(hass)
-        for device_id in device_ids:
-            device = dr.async_get(device_id)
-            if not device:
-                continue
-            identifiers = list(device.identifiers)[0]
-            if identifiers[0] != DOMAIN:
-                continue
-            config_entry_id = list(device.config_entries)[0]
-            if config_entry_id not in hass.data[DOMAIN]:
-                continue
-            targets[identifiers[1]] = hass.data[DOMAIN][config_entry_id]
-        return targets
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_SET_PROFILE,
-        async_handle_set_profile,
-        schema=SERVICE_SET_PROFILE_SCHEMA
-    )
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_WORK_UNTIL,
-        async_handle_work_until,
-        schema=SERVICE_WORK_UNTIL_SCHEMA
-    )
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_BORDER_CUT,
-        async_handle_border_cut,
-        schema=SERVICE_BORDER_CUT_SCHEMA
-    )
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_CHARGE_UNTIL,
-        async_handle_charge_until,
-        schema=SERVICE_CHARGE_UNTIL_SCHEMA
-    )
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_TRACE_POSITION,
-        async_handle_trace_position,
-        schema=SERVICE_TRACE_POSITION_SCHEMA
-    )
     return True
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

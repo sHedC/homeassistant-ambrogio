@@ -3,26 +3,25 @@ from __future__ import annotations
 
 from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.components.sensor import (
-    SensorDeviceClass,
-    SensorEntity,
-    SensorEntityDescription,
+from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
+    BinarySensorEntity,
+    BinarySensorEntityDescription,
 )
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     DOMAIN,
-    ROBOT_STATES,
+    ROBOT_ERRORS,
 )
 from .coordinator import AmbrogioDataUpdateCoordinator
 from .entity import AmbrogioRobotEntity
 
 ENTITY_DESCRIPTIONS = (
-    SensorEntityDescription(
-        key="state",
-        name="Robot State",
-        device_class=SensorDeviceClass.ENUM,
-        translation_key="state",
+    BinarySensorEntityDescription(
+        key="error",
+        translation_key="error",
+        device_class=BinarySensorDeviceClass.PROBLEM,
     ),
 )
 
@@ -34,7 +33,7 @@ async def async_setup_entry(
     coordinator: AmbrogioDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_devices(
         [
-            AmbrogioRobotSensor(
+            AmbrogioRobotBinarySensor(
                 coordinator=coordinator,
                 entity_description=entity_description,
                 robot_imei=robot_imei,
@@ -47,13 +46,13 @@ async def async_setup_entry(
     )
 
 
-class AmbrogioRobotSensor(AmbrogioRobotEntity, SensorEntity):
+class AmbrogioRobotBinarySensor(AmbrogioRobotEntity, BinarySensorEntity):
     """Ambrogio Robot Sensor class."""
 
     def __init__(
         self,
         coordinator: AmbrogioDataUpdateCoordinator,
-        entity_description: SensorEntityDescription,
+        entity_description: BinarySensorEntityDescription,
         robot_imei: str,
         robot_name: str,
     ) -> None:
@@ -62,17 +61,21 @@ class AmbrogioRobotSensor(AmbrogioRobotEntity, SensorEntity):
             coordinator=coordinator,
             robot_imei=robot_imei,
             robot_name=robot_name,
-            entity_type="sensor",
+            entity_type="binary_sensor",
             entity_key=entity_description.key,
         )
         self.entity_description = entity_description
 
-    @property
-    def icon(self) -> str:
-        """Return the icon of the entity."""
-        return ROBOT_STATES[self._state]["icon"]
+    def _update_extra_state_attributes(self) -> None:
+        """Update extra attributes."""
+        if self._entity_key == "error":
+            if self._state == 4:
+                self._additional_extra_state_attributes = {
+                    "reason": ROBOT_ERRORS.get(self._error, "unknown"),
+                }
 
     @property
-    def native_value(self) -> str:
-        """Return the native value of the sensor."""
-        return ROBOT_STATES[self._state]["name"]
+    def is_on(self) -> bool:
+        """Return true if the binary_sensor is on."""
+        if self._entity_key == "error":
+            return self._state == 4
