@@ -123,7 +123,7 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
                 self.update_single_mower = None
             else:
                 """Update all mowers."""
-                await self.async_update_all_mowers()
+                await self.async_fetch_all_mowers()
 
             # TODO
             LOGGER.debug("_async_update_data")
@@ -156,10 +156,10 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
         count_helper = [v['working'] for k, v in self.mower_data.items() if v.get('working')]
         return len(count_helper) > 0
 
-    async def async_update_all_mowers(
+    async def async_fetch_all_mowers(
         self,
     ) -> None:
-        """Update all mowers."""
+        """Fetch data for all mowers."""
         mower_imeis = list(self.mower_data.keys())
         if len(mower_imeis) == 0:
             return None
@@ -196,6 +196,25 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
             ):
                 await self.async_update_single_mower(mower)
 
+    async def async_fetch_single_mower(
+        self,
+        imei: str,
+    ) -> bool:
+        """Fetch data for single mower, return connection state."""
+        await self.client.execute(
+            "thing.find",
+            {
+                "imei": imei,
+            },
+        )
+        response = await self.client.get_response()
+        connected = response.get("connected", False)
+        self.update_single_mower = response
+        self.hass.async_create_task(
+            self._async_update_data()
+        )
+        return connected
+
     async def async_update_single_mower(
         self,
         data: dict[str, any],
@@ -231,32 +250,13 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
 
         self.mower_data[data["key"]] = this_mower
 
-    async def async_get_single_mower(
-        self,
-        imei: str,
-    ) -> bool:
-        """Get a single mower."""
-        await self.client.execute(
-            "thing.find",
-            {
-                "imei": imei,
-            },
-        )
-        response = await self.client.get_response()
-        connected = response.get("connected", False)
-        self.update_single_mower = response
-        self.hass.async_create_task(
-            self._async_update_data()
-        )
-        return connected
-
     async def async_prepare_for_command(
         self,
         imei: str,
     ) -> bool:
         """Prepare lawn mower for incomming command."""
         try:
-            connected = await self.async_get_single_mower(imei)
+            connected = await self.async_fetch_single_mower(imei)
             if connected is True:
                 return True
             await self.async_wake_up(imei)
@@ -264,7 +264,7 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
 
             attempt = 0
             while connected is False and attempt <= 5:
-                connected = await self.async_get_single_mower(imei)
+                connected = await self.async_fetch_single_mower(imei)
                 if connected is True:
                     return True
                 attempt = attempt + 1
