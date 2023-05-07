@@ -64,7 +64,8 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
         self.robots = robots
         self.client = client
 
-        self.robot_data = {}
+        self.mower_data = {}
+        self.update_single_mower = None
 
         self._loop = asyncio.get_event_loop()
 
@@ -98,11 +99,15 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self):
         """Update data via library."""
         try:
-            robot_data = {}
+            if self.update_single_mower is not None:
+                self.update_single_mower = None
+                return
+
+            mower_data = {}
             robot_imeis = []
             for robot_imei, robot_name in self.robots.items():
                 robot_imeis.append(robot_imei)
-                robot_data[robot_imei] = {
+                mower_data[robot_imei] = {
                     CONF_ROBOT_NAME: robot_name,
                     CONF_ROBOT_IMEI: robot_imei,
                     ATTR_SERIAL: None,
@@ -115,7 +120,7 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
                     ATTR_LAST_SEEN: None,
                 }
             if len(robot_imeis) == 0:
-                return robot_data
+                return mower_data
 
             await self.client.execute(
                 "thing.list",
@@ -145,52 +150,71 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
                 for robot in (
                     robot
                     for robot in result_list
-                    if "key" in robot and robot["key"] in robot_data
+                    if "key" in robot and robot["key"] in mower_data
                 ):
                     if "alarms" in robot and "robot_state" in robot["alarms"]:
                         robot_state = robot["alarms"]["robot_state"]
-                        robot_data[robot["key"]][ATTR_STATE] = robot_state[
+                        mower_data[robot["key"]][ATTR_STATE] = robot_state[
                             "state"
                         ]
                         if "msg" in robot_state:
-                            robot_data[robot["key"]][ATTR_ERROR] = int(robot_state[
+                            mower_data[robot["key"]][ATTR_ERROR] = int(robot_state[
                                 "msg"
                             ])
                         # latitude and longitude, not always available
                         if "lat" in robot_state and "lng" in robot_state:
-                            robot_data[robot["key"]][ATTR_LOCATION] = {
+                            mower_data[robot["key"]][ATTR_LOCATION] = {
                                 ATTR_LATITUDE: robot_state["lat"],
                                 ATTR_LONGITUDE: robot_state["lng"],
                             }
                     if "attrs" in robot:
                         if "robot_serial" in robot["attrs"]:
-                            robot_data[robot["key"]][ATTR_SERIAL] = robot["attrs"]["robot_serial"][
+                            mower_data[robot["key"]][ATTR_SERIAL] = robot["attrs"]["robot_serial"][
                                 "value"
                             ]
                         if "program_version" in robot["attrs"]:
-                            robot_data[robot["key"]][ATTR_SW_VERSION] = robot["attrs"]["program_version"][
+                            mower_data[robot["key"]][ATTR_SW_VERSION] = robot["attrs"]["program_version"][
                                 "value"
                             ]
                     if "connected" in robot:
-                        robot_data[robot["key"]][ATTR_CONNECTED] = robot["connected"]
+                        mower_data[robot["key"]][ATTR_CONNECTED] = robot["connected"]
                     if "lastCommunication" in robot:
-                        robot_data[robot["key"]][ATTR_LAST_COMM] = self._convert_datetime_from_api(robot["lastCommunication"])
+                        mower_data[robot["key"]][ATTR_LAST_COMM] = self._convert_datetime_from_api(robot["lastCommunication"])
                     if "lastSeen" in robot:
-                        robot_data[robot["key"]][ATTR_LAST_SEEN] = self._convert_datetime_from_api(robot["lastSeen"])
+                        mower_data[robot["key"]][ATTR_LAST_SEEN] = self._convert_datetime_from_api(robot["lastSeen"])
 
             # TODO
             LOGGER.debug("_async_update_data")
-            LOGGER.debug(robot_data)
+            LOGGER.debug(mower_data)
 
-            self.robot_data = robot_data
+            self.mower_data = mower_data
 
             return {
-                CONF_MOWERS: self.robot_data,
+                CONF_MOWERS: self.mower_data,
             }
         except AmbrogioRobotApiClientAuthenticationError as exception:
             raise ConfigEntryAuthFailed(exception) from exception
         except AmbrogioRobotApiClientError as exception:
             raise UpdateFailed(exception) from exception
+
+    async def async_get_single_mower(
+        self,
+        imei: str,
+    ) -> bool:
+        """Get a single mower."""
+        await self.client.execute(
+            "thing.find",
+            {
+                "imei": imei,
+            },
+        )
+        response = await self.client.get_response()
+        connected = response.get("connected", False)
+        self.update_single_mower = response
+        self.hass.async_create_task(
+            self._async_update_data()
+        )
+        return connected
 
     async def async_prepare_for_command(
         self,
@@ -198,29 +222,15 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
     ) -> bool:
         """Prepare lawn mower for incomming command."""
         try:
-            await self.client.execute(
-                "thing.find",
-                {
-                    "imei": imei,
-                },
-            )
-            response = await self.client.get_response()
-            connected = response.get("connected", False)
+            connected = await self.async_get_single_mower(imei)
             if connected is True:
                 return True
             await self.async_wake_up(imei)
             await asyncio.sleep(5)
 
             attempt = 0
-            while connected is False and attempt < 31:
-                await self.client.execute(
-                    "thing.find",
-                    {
-                        "imei": imei,
-                    },
-                )
-                response = await self.client.get_response()
-                connected = response.get("connected", False)
+            while connected is False and attempt <= 5:
+                connected = await self.async_get_single_mower(imei)
                 if connected is True:
                     return True
                 attempt = attempt + 1
