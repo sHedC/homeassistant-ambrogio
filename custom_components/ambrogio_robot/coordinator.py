@@ -314,13 +314,9 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
     async def async_work_now(
         self,
         imei: str,
-        area: int | None = None,
     ) -> bool:
         """Send command work_now to lawn nower."""
         LOGGER.debug(f"work_now: {imei}")
-        _params = {}
-        if isinstance(area, int) and area in range(1, 10):
-            _params["area"] = area - 1
         try:
             await self.async_prepare_for_command(imei)
             return await self.client.execute(
@@ -328,7 +324,6 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
                 {
                     "method": "work_now",
                     "imei": imei,
-                    "params": _params,
                     "ackTimeout": API_ACK_TIMEOUT,
                     "singleton": True,
                 },
