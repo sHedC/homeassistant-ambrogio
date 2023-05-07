@@ -2,7 +2,8 @@
   "domain": "ambrogio_robot",
   "name": "Ambrogio Robot",
   "codeowners": [
-    "@sHedC"
+    "@sHedC",
+    "@ufozone"
   ],
   "config_flow": true,
   "documentation": "https://github.com/sHedC/homeassistant-ambrogio",

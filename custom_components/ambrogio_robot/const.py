@@ -3,7 +3,11 @@ from logging import Logger, getLogger
 
 import voluptuous as vol
 from homeassistant.const import (
-    ATTR_DEVICE_ID,
+    CONF_DEVICE_ID,
+    CONF_LOCATION,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    CONF_RADIUS,
 )
 from homeassistant.helpers import config_validation as cv
 
@@ -13,10 +17,11 @@ NAME = "Ambrogio Robot"
 DOMAIN = "ambrogio_robot"
 VERSION = "0.0.0"
 MANUFACTURER = "Zucchetti Centro Sistemi"
-ATTRIBUTION = "Data provided by http://jsonplaceholder.typicode.com/"
+ATTRIBUTION = "Data provided gently by Telit IoT Platform"
 
 API_TOKEN = "DJMYYngGNEit40vA"
-API_DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
+API_DATETIME_FORMAT_DEFAULT = "%Y-%m-%dT%H:%M:%S.%f%z"
+API_DATETIME_FORMAT_FALLBACK = "%Y-%m-%dT%H:%M:%S%z"
 API_ACK_TIMEOUT = 30
 
 CONF_CONFIRM = "confirm"
@@ -35,50 +40,82 @@ ATTR_LAST_PULL = "last_pull"
 SERVICE_SET_PROFILE = "set_profile"
 SERVICE_SET_PROFILE_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): cv.entity_ids_or_uuids,
+        vol.Required(CONF_DEVICE_ID): cv.entity_ids_or_uuids,
         vol.Required("profile"): vol.All(vol.Coerce(int), vol.Range(min=1, max=3)),
     }
 )
 SERVICE_WORK_NOW = "work_now"
 SERVICE_WORK_NOW_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): cv.entity_ids_or_uuids,
+        vol.Required(CONF_DEVICE_ID): cv.entity_ids_or_uuids,
+        vol.Optional("area"): vol.All(vol.Coerce(int), vol.Range(min=1, max=10)),
+    }
+)
+SERVICE_WORK_FOR = "work_for"
+SERVICE_WORK_FOR_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_DEVICE_ID): cv.entity_ids_or_uuids,
+        vol.Required("duration"): vol.All(vol.Coerce(int), vol.Range(min=1, max=1439)),
+        vol.Optional("area"): vol.All(vol.Coerce(int), vol.Range(min=1, max=10)),
     }
 )
 SERVICE_WORK_UNTIL = "work_until"
 SERVICE_WORK_UNTIL_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): cv.entity_ids_or_uuids,
-        vol.Required("area"): vol.All(vol.Coerce(int), vol.Range(min=1, max=8)),
-        vol.Required("hours"): vol.All(vol.Coerce(int), vol.Range(min=0, max=24)),
-        vol.Required("minutes"): vol.All(vol.Coerce(int), vol.Range(min=0, max=60)),
+        vol.Required(CONF_DEVICE_ID): cv.entity_ids_or_uuids,
+        vol.Required("hours"): vol.All(vol.Coerce(int), vol.Range(min=0, max=23)),
+        vol.Required("minutes"): vol.All(vol.Coerce(int), vol.Range(min=0, max=59)),
+        vol.Optional("area"): vol.All(vol.Coerce(int), vol.Range(min=1, max=10)),
     }
 )
 SERVICE_BORDER_CUT = "border_cut"
 SERVICE_BORDER_CUT_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): cv.entity_ids_or_uuids,
+        vol.Required(CONF_DEVICE_ID): cv.entity_ids_or_uuids,
     }
 )
 SERVICE_CHARGE_NOW = "charge_now"
 SERVICE_CHARGE_NOW_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): cv.entity_ids_or_uuids,
+        vol.Required(CONF_DEVICE_ID): cv.entity_ids_or_uuids,
+    }
+)
+SERVICE_CHARGE_FOR = "charge_for"
+SERVICE_CHARGE_FOR_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_DEVICE_ID): cv.entity_ids_or_uuids,
+        vol.Required("duration"): vol.All(vol.Coerce(int), vol.Range(min=1, max=1439)),
     }
 )
 SERVICE_CHARGE_UNTIL = "charge_until"
 SERVICE_CHARGE_UNTIL_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): cv.entity_ids_or_uuids,
-        vol.Required("hours"): vol.All(vol.Coerce(int), vol.Range(min=0, max=24)),
-        vol.Required("minutes"): vol.All(vol.Coerce(int), vol.Range(min=0, max=60)),
-        vol.Required("weekday"): vol.All(vol.Coerce(int), vol.Range(min=0, max=6)),
+        vol.Required(CONF_DEVICE_ID): cv.entity_ids_or_uuids,
+        vol.Required("hours"): vol.All(vol.Coerce(int), vol.Range(min=0, max=23)),
+        vol.Required("minutes"): vol.All(vol.Coerce(int), vol.Range(min=0, max=59)),
+        vol.Required("weekday"): vol.All(vol.Coerce(int), vol.Range(min=1, max=7)),
     }
 )
 SERVICE_TRACE_POSITION = "trace_position"
 SERVICE_TRACE_POSITION_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): cv.entity_ids_or_uuids,
+        vol.Required(CONF_DEVICE_ID): cv.entity_ids_or_uuids,
+    }
+)
+SERVICE_KEEP_OUT = "keep_out"
+SERVICE_KEEP_OUT_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_DEVICE_ID): cv.entity_ids_or_uuids,
+        vol.Required(CONF_LOCATION): vol.Schema(
+            {
+                vol.Required(CONF_LATITUDE): float,
+                vol.Required(CONF_LONGITUDE): float,
+                vol.Optional(CONF_RADIUS): int,
+            }
+        ),
+        vol.Optional("hours"): vol.All(vol.Coerce(int), vol.Range(min=0, max=23)),
+        vol.Optional("minutes"): vol.All(vol.Coerce(int), vol.Range(min=0, max=59)),
+        vol.Optional("index"): vol.Coerce(int),
     }
 )
 

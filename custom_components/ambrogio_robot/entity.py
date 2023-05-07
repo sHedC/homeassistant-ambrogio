@@ -1,7 +1,10 @@
 """BlueprintEntity class."""
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import (
+    datetime,
+    timezone,
+)
 from homeassistant.const import (
     ATTR_NAME,
     ATTR_IDENTIFIERS,
@@ -50,6 +53,9 @@ class AmbrogioRobotEntity(CoordinatorEntity):
         """Initialize."""
         super().__init__(coordinator)
 
+        self._entity_type = entity_type
+        self._entity_key = entity_key
+
         self._robot_imei = robot_imei
         self._robot_name = robot_name
         self._serial = None
@@ -74,7 +80,11 @@ class AmbrogioRobotEntity(CoordinatorEntity):
 
         self.entity_id = f"{entity_type}.{self._attr_unique_id}"
 
-    def update_extra_state_attributes(self) -> None:
+    def _get_attributes(self) -> dict:
+        """Get the mower attributes of the current mower."""
+        return self.coordinator.data[self._imei]
+
+    def _update_extra_state_attributes(self) -> None:
         """Update extra attributes."""
         self._additional_extra_state_attributes = {}
 
@@ -146,5 +156,5 @@ class AmbrogioRobotEntity(CoordinatorEntity):
             self._connected = robot[ATTR_CONNECTED]
             self._last_communication = robot[ATTR_LAST_COMM]
             self._last_seen = robot[ATTR_LAST_SEEN]
-            self._last_pull = datetime.now()
-            self.update_extra_state_attributes()
+            self._last_pull = datetime.utcnow().replace(tzinfo=timezone.utc)
+            self._update_extra_state_attributes()

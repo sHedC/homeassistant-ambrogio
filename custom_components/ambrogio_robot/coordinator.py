@@ -1,10 +1,14 @@
 """DataUpdateCoordinator for Ambrogio Robot."""
 from __future__ import annotations
 
+import asyncio
+
 from datetime import (
     timedelta,
     datetime,
 )
+from pytz import timezone
+
 from homeassistant.core import HomeAssistant
 from homeassistant.const import (
     ATTR_LOCATION,
@@ -27,7 +31,8 @@ from .api import (
 from .const import (
     DOMAIN,
     LOGGER,
-    API_DATETIME_FORMAT,
+    API_DATETIME_FORMAT_DEFAULT,
+    API_DATETIME_FORMAT_FALLBACK,
     API_ACK_TIMEOUT,
     CONF_MOWERS,
     CONF_ROBOT_NAME,
@@ -37,7 +42,6 @@ from .const import (
     ATTR_CONNECTED,
     ATTR_LAST_COMM,
     ATTR_LAST_SEEN,
-    # ROBOT_STATES,
 )
 
 
@@ -51,14 +55,37 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
         client: AmbrogioRobotApiClient,
     ) -> None:
         """Initialize."""
-        self.client = client
-        self.robots = robots
         super().__init__(
             hass=hass,
             logger=LOGGER,
             name=DOMAIN,
             update_interval=timedelta(minutes=5),
         )
+        self.robots = robots
+        self.client = client
+
+        self.robot_data = {}
+
+        self._loop = asyncio.get_event_loop()
+
+    def _convert_datetime_from_api(
+        self,
+        date_string: str,
+    ) -> datetime:
+        """Convert datetime string from API data into datetime object."""
+        try:
+            return datetime.strptime(date_string, API_DATETIME_FORMAT_DEFAULT)
+        except ValueError:
+            return datetime.strptime(date_string, API_DATETIME_FORMAT_FALLBACK)
+
+    def _get_datetime_from_duration(
+        self,
+        duration: int,
+    ) -> datetime:
+        """Get datetime object by adding a duration to the current time."""
+        locale_timezone = timezone(str(self.hass.config.time_zone))
+        datetime_now = datetime.utcnow().astimezone(locale_timezone)
+        return datetime_now + timedelta(minutes=duration)
 
     async def __aenter__(self):
         """Return Self."""
@@ -71,11 +98,11 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self):
         """Update data via library."""
         try:
-            robot_data = {CONF_MOWERS: {}}
+            robot_data = {}
             robot_imeis = []
             for robot_imei, robot_name in self.robots.items():
                 robot_imeis.append(robot_imei)
-                robot_data[CONF_MOWERS][robot_imei] = {
+                robot_data[robot_imei] = {
                     CONF_ROBOT_NAME: robot_name,
                     CONF_ROBOT_IMEI: robot_imei,
                     ATTR_SERIAL: None,
@@ -118,49 +145,91 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
                 for robot in (
                     robot
                     for robot in result_list
-                    if "key" in robot and robot["key"] in robot_data[CONF_MOWERS]
+                    if "key" in robot and robot["key"] in robot_data
                 ):
                     if "alarms" in robot and "robot_state" in robot["alarms"]:
                         robot_state = robot["alarms"]["robot_state"]
-                        robot_data[CONF_MOWERS][robot["key"]][ATTR_STATE] = robot_state[
+                        robot_data[robot["key"]][ATTR_STATE] = robot_state[
                             "state"
                         ]
                         if "msg" in robot_state:
-                            robot_data[CONF_MOWERS][robot["key"]][ATTR_ERROR] = int(robot_state[
+                            robot_data[robot["key"]][ATTR_ERROR] = int(robot_state[
                                 "msg"
                             ])
                         # latitude and longitude, not always available
                         if "lat" in robot_state and "lng" in robot_state:
-                            robot_data[CONF_MOWERS][robot["key"]][ATTR_LOCATION] = {
+                            robot_data[robot["key"]][ATTR_LOCATION] = {
                                 ATTR_LATITUDE: robot_state["lat"],
                                 ATTR_LONGITUDE: robot_state["lng"],
                             }
                     if "attrs" in robot:
                         if "robot_serial" in robot["attrs"]:
-                            robot_data[CONF_MOWERS][robot["key"]][ATTR_SERIAL] = robot["attrs"]["robot_serial"][
+                            robot_data[robot["key"]][ATTR_SERIAL] = robot["attrs"]["robot_serial"][
                                 "value"
                             ]
                         if "program_version" in robot["attrs"]:
-                            robot_data[CONF_MOWERS][robot["key"]][ATTR_SW_VERSION] = robot["attrs"]["program_version"][
+                            robot_data[robot["key"]][ATTR_SW_VERSION] = robot["attrs"]["program_version"][
                                 "value"
                             ]
                     if "connected" in robot:
-                        robot_data[CONF_MOWERS][robot["key"]][ATTR_CONNECTED] = robot["connected"]
+                        robot_data[robot["key"]][ATTR_CONNECTED] = robot["connected"]
                     if "lastCommunication" in robot:
-                        robot_data[CONF_MOWERS][robot["key"]][ATTR_LAST_COMM] = datetime.strptime(robot["lastCommunication"], API_DATETIME_FORMAT)
+                        robot_data[robot["key"]][ATTR_LAST_COMM] = self._convert_datetime_from_api(robot["lastCommunication"])
                     if "lastSeen" in robot:
-                        robot_data[CONF_MOWERS][robot["key"]][ATTR_LAST_SEEN] = datetime.strptime(robot["lastSeen"], API_DATETIME_FORMAT)
+                        robot_data[robot["key"]][ATTR_LAST_SEEN] = self._convert_datetime_from_api(robot["lastSeen"])
 
             # TODO
             LOGGER.debug("_async_update_data")
             LOGGER.debug(robot_data)
 
-            return robot_data
+            self.robot_data = robot_data
 
+            return {
+                CONF_MOWERS: self.robot_data,
+            }
         except AmbrogioRobotApiClientAuthenticationError as exception:
             raise ConfigEntryAuthFailed(exception) from exception
         except AmbrogioRobotApiClientError as exception:
             raise UpdateFailed(exception) from exception
+
+    async def async_prepare_for_command(
+        self,
+        imei: str,
+    ) -> bool:
+        """Prepare lawn mower for incomming command."""
+        try:
+            await self.client.execute(
+                "thing.find",
+                {
+                    "imei": imei,
+                },
+            )
+            response = await self.client.get_response()
+            connected = response.get("connected", False)
+            if connected is True:
+                return True
+            await self.async_wake_up(imei)
+            await asyncio.sleep(5)
+
+            attempt = 0
+            while connected is False and attempt < 31:
+                await self.client.execute(
+                    "thing.find",
+                    {
+                        "imei": imei,
+                    },
+                )
+                response = await self.client.get_response()
+                connected = response.get("connected", False)
+                if connected is True:
+                    return True
+                attempt = attempt + 1
+                await asyncio.sleep(5)
+            raise asyncio.TimeoutError(
+                f"The lawn mower with IMEI {imei} was not available after a long wait"
+            )
+        except Exception as exception:
+            LOGGER.exception(exception)
 
     async def async_wake_up(
         self,
@@ -189,7 +258,7 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
         """Send command set_profile to lawn nower."""
         LOGGER.debug(f"set_profile: {imei}")
         try:
-            await self.async_wake_up(imei)
+            await self.async_prepare_for_command(imei)
             return await self.client.execute(
                 "method.exec",
                 {
@@ -204,57 +273,79 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
             )
         except Exception as exception:
             LOGGER.exception(exception)
-        return False
 
     async def async_work_now(
         self,
         imei: str,
+        area: int | None = None,
     ) -> bool:
         """Send command work_now to lawn nower."""
         LOGGER.debug(f"work_now: {imei}")
+        _params = {}
+        if isinstance(area, int) and area in range(1, 10):
+            _params["area"] = area - 1
         try:
-            await self.async_wake_up(imei)
+            await self.async_prepare_for_command(imei)
             return await self.client.execute(
                 "method.exec",
                 {
                     "method": "work_now",
                     "imei": imei,
+                    "params": _params,
                     "ackTimeout": API_ACK_TIMEOUT,
                     "singleton": True,
                 },
             )
         except Exception as exception:
             LOGGER.exception(exception)
-        return False
+
+    async def async_work_for(
+        self,
+        imei: str,
+        duration: int,
+        area: int | None = None,
+    ) -> bool:
+        """Prepare command work_for."""
+        LOGGER.debug(f"work_for: {imei}")
+        _target = self._get_datetime_from_duration(duration)
+        await self.async_work_until(
+            imei=imei,
+            hours=_target.hour,
+            minutes=_target.minute,
+            area=area,
+        )
 
     async def async_work_until(
         self,
         imei: str,
-        area: int,
         hours: int,
         minutes: int,
+        area: int | None = None,
     ) -> bool:
         """Send command work_until to lawn nower."""
         LOGGER.debug(f"work_until: {imei}")
+        _params = {
+            "hh": hours,
+            "mm": minutes,
+        }
+        if isinstance(area, int) and area in range(1, 10):
+            _params["area"] = area - 1
+        else:
+            _params["area"] = 255
         try:
-            await self.async_wake_up(imei)
+            await self.async_prepare_for_command(imei)
             return await self.client.execute(
                 "method.exec",
                 {
                     "method": "work_until",
                     "imei": imei,
-                    "params": {
-                        "area": (area - 1),
-                        "hh": hours,
-                        "mm": minutes,
-                    },
+                    "params": _params,
                     "ackTimeout": API_ACK_TIMEOUT,
                     "singleton": True,
                 },
             )
         except Exception as exception:
             LOGGER.exception(exception)
-        return False
 
     async def async_border_cut(
         self,
@@ -263,7 +354,7 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
         """Send command border_cut to lawn nower."""
         LOGGER.debug(f"border_cut: {imei}")
         try:
-            await self.async_wake_up(imei)
+            await self.async_prepare_for_command(imei)
             return await self.client.execute(
                 "method.exec",
                 {
@@ -275,7 +366,6 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
             )
         except Exception as exception:
             LOGGER.exception(exception)
-        return False
 
     async def async_charge_now(
         self,
@@ -284,7 +374,7 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
         """Send command charge_now to lawn nower."""
         LOGGER.debug(f"charge_now: {imei}")
         try:
-            await self.async_wake_up(imei)
+            await self.async_prepare_for_command(imei)
             return await self.client.execute(
                 "method.exec",
                 {
@@ -296,7 +386,20 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
             )
         except Exception as exception:
             LOGGER.exception(exception)
-        return False
+
+    async def async_charge_for(
+        self,
+        imei: str,
+        duration: int,
+    ) -> bool:
+        """Prepare command charge_until."""
+        _target = self._get_datetime_from_duration(duration)
+        await self.async_charge_until(
+            imei=imei,
+            hours=_target.hour,
+            minutes=_target.minute,
+            weekday=_target.isoweekday(),
+        )
 
     async def async_charge_until(
         self,
@@ -308,7 +411,7 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
         """Send command charge_until to lawn nower."""
         LOGGER.debug(f"charge_until: {imei}")
         try:
-            await self.async_wake_up(imei)
+            await self.async_prepare_for_command(imei)
             return await self.client.execute(
                 "method.exec",
                 {
@@ -317,7 +420,7 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
                     "params": {
                         "hh": hours,
                         "mm": minutes,
-                        "weekday": weekday,
+                        "weekday": (weekday - 1),
                     },
                     "ackTimeout": API_ACK_TIMEOUT,
                     "singleton": True,
@@ -325,7 +428,6 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
             )
         except Exception as exception:
             LOGGER.exception(exception)
-        return False
 
     async def async_trace_position(
         self,
@@ -334,7 +436,7 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
         """Send command trace_position to lawn nower."""
         LOGGER.debug(f"trace_position: {imei}")
         try:
-            await self.async_wake_up(imei)
+            await self.async_prepare_for_command(imei)
             return await self.client.execute(
                 "method.exec",
                 {
@@ -346,4 +448,63 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
             )
         except Exception as exception:
             LOGGER.exception(exception)
-        return False
+
+    async def async_keep_out(
+        self,
+        imei: str,
+        latitude: float,
+        longitude: float,
+        radius: int,
+        hours: int | None = None,
+        minutes: int | None = None,
+        index: int | None = None,
+    ) -> bool:
+        """Send command keep_out to lawn nower."""
+        LOGGER.debug(f"keep_out: {imei}")
+        _params = {
+            "latitude": latitude,
+            "longitude": longitude,
+            "radius": radius,
+        }
+        if isinstance(hours, int) and hours in range(0, 23):
+            _params["hh"] = hours
+        if isinstance(minutes, int) and minutes in range(0, 59):
+            _params["mm"] = minutes
+        if isinstance(index, int):
+            _params["index"] = index
+        try:
+            await self.async_prepare_for_command(imei)
+            return await self.client.execute(
+                "method.exec",
+                {
+                    "method": "keep_out",
+                    "imei": imei,
+                    "params": _params,
+                    "ackTimeout": API_ACK_TIMEOUT,
+                    "singleton": True,
+                },
+            )
+        except Exception as exception:
+            LOGGER.exception(exception)
+
+    async def async_custom_command(
+        self,
+        imei: str,
+        command: str,
+        params: dict[str, any] | list[any] | None = None,
+    ) -> bool:
+        """Send custom command to lawn nower."""
+        try:
+            await self.async_prepare_for_command(imei)
+            return await self.client.execute(
+                "method.exec",
+                {
+                    "method": command,
+                    "imei": imei,
+                    "params": params,
+                    "ackTimeout": API_ACK_TIMEOUT,
+                    "singleton": True,
+                },
+            )
+        except Exception as exception:
+            LOGGER.exception(exception)
