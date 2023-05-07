@@ -142,6 +142,20 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
         except AmbrogioRobotApiClientError as exception:
             raise UpdateFailed(exception) from exception
 
+    async def async_get_mower_attributes(
+        self,
+        imei: str,
+    ) -> dict[str, any] | None:
+        """Get attributes of an given lawn mower."""
+        return self.mower_data.get(imei, None)
+
+    async def async_has_working_mowers(
+        self,
+    ) -> bool:
+        """Count the working lawn mowers."""
+        count_helper = [v['working'] for k, v in self.mower_data.items() if v.get('working')]
+        return len(count_helper) > 0
+
     async def async_update_all_mowers(
         self,
     ) -> None:
@@ -187,7 +201,7 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
         data: dict[str, any],
     ) -> None:
         """Update a single mower."""
-        this_mower = self.mower_data.get(data["key"], None)
+        this_mower = self.async_get_mower_attributes(data["key"])
         if this_mower is None:
             return None
         # Start refreshing mower in coordinator from fetched API data
@@ -235,13 +249,6 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
             self._async_update_data()
         )
         return connected
-
-    async def async_has_working_mowers(
-        self,
-    ) -> bool:
-        """Count the working lawn mowers."""
-        count_helper = [v['working'] for k, v in self.mower_data.items() if v.get('working')]
-        return len(count_helper) > 0
 
     async def async_prepare_for_command(
         self,
