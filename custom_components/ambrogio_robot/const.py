@@ -24,6 +24,9 @@ API_DATETIME_FORMAT_DEFAULT = "%Y-%m-%dT%H:%M:%S.%f%z"
 API_DATETIME_FORMAT_FALLBACK = "%Y-%m-%dT%H:%M:%S%z"
 API_ACK_TIMEOUT = 30
 
+UPDATE_INTERVAL_DEFAULT = 5
+UPDATE_INTERVAL_WORKING = 1
+
 CONF_CONFIRM = "confirm"
 CONF_MOWERS = "mowers"
 CONF_ROBOT_NAME = "robot_name"
@@ -31,6 +34,7 @@ CONF_ROBOT_IMEI = "robot_imei"
 CONF_SELECTED_ROBOT = "selected_robot"
 
 ATTR_SERIAL = "serial"
+ATTR_WORKING = "working"
 ATTR_ERROR = "error"
 ATTR_CONNECTED = "connected"
 ATTR_LAST_COMM = "last_communication"
@@ -119,6 +123,7 @@ SERVICE_KEEP_OUT_SCHEMA = vol.Schema(
     }
 )
 
+ROBOT_WORKING_STATES = [2, 6, 7, 8, 11]
 ROBOT_STATES = [
     {
         "name" : "unknown",
