@@ -29,6 +29,7 @@ from .const import (
     ATTR_LAST_COMM,
     ATTR_LAST_SEEN,
     ATTR_LAST_PULL,
+    ROBOT_MODELS,
     ROBOT_STATES,
 )
 from .coordinator import AmbrogioDataUpdateCoordinator
@@ -154,6 +155,8 @@ class AmbrogioRobotEntity(CoordinatorEntity):
             and len(self._serial) > 5
         ):
             self._model = self._serial[0:6]
+            if self._model in ROBOT_MODELS:
+                self._model = ROBOT_MODELS[self._model]
         self._sw_version = robot[ATTR_SW_VERSION]
 
         self._connected = robot[ATTR_CONNECTED]

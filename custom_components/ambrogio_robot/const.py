@@ -124,6 +124,37 @@ SERVICE_KEEP_OUT_SCHEMA = vol.Schema(
     }
 )
 
+ROBOT_MODELS = {
+    "AM015D": "Fifteen Deluxe", # ?
+    "AM020D": "Twenty Deluxe", # ?
+    "AM020L": "Twenty Elite",
+    "AM020P": "Twenty Elite S+", # ?
+    "AM020R": "Twenty ZR", # ?
+    "AM025D": "Twenty 25 Deluxe", # ?
+    "AM025L": "Twenty 25 Elite", # ?
+    "AM029D": "Twenty 29 Deluxe", # ?
+    "AM029L": "Twenty 29 Elite", # ?
+    "AM032D": "L32 Deluxe", # ?
+    "AM035B": "L35 Basic",
+    "AM035D": "L35 Deluxe",
+    "AM040B": "4.0 Basic", # ???
+    "AM040L": "4.0 Elite", # ???
+    "AM043L": "4.36 Elite",
+    "AM060L": "L60 Elite", # ?
+    "AM060P": "L60 Elite S+", # ?
+    "AM085L": "L85 Elite", # ?
+    #"AM095L": "", # DB:1082
+    "AM250D": "L250 Deluxe", # ?
+    "AM250L": "L250i Elite",
+    "AM250P": "L250i Elite S+",# ?
+    "AM350L": "L350i Elite", # ?
+    "AM400B": "L400i Basic", # ?
+    "AM400D": "L400i Deluxe", # ?
+    "AM400L": "L400 Elite", # ?
+    #"AM450B": "", # DB:21
+    #"AM450D": "", # DB:99
+}
+
 ROBOT_STATES = [
     {
         "name" : "unknown",
