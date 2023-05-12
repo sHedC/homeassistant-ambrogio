@@ -12,10 +12,14 @@ from datetime import (
 
 from homeassistant.core import HomeAssistant
 from homeassistant.const import (
+    ATTR_NAME,
+    ATTR_ICON,
+    ATTR_STATE,
     ATTR_LOCATION,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
-    ATTR_STATE,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
     ATTR_SW_VERSION,
 )
 from homeassistant.helpers.update_coordinator import (
@@ -30,8 +34,9 @@ from .api import (
     AmbrogioRobotApiClientError,
 )
 from .const import (
-    DOMAIN,
     LOGGER,
+    DOMAIN,
+    MANUFACTURER,
     API_DATETIME_FORMAT_DEFAULT,
     API_DATETIME_FORMAT_FALLBACK,
     API_ACK_TIMEOUT,
@@ -42,14 +47,18 @@ from .const import (
     ATTR_SERIAL,
     ATTR_WORKING,
     ATTR_ERROR,
+    ATTR_AVAILABLE,
     ATTR_CONNECTED,
     ATTR_LAST_COMM,
     ATTR_LAST_SEEN,
     ATTR_LAST_PULL,
     ATTR_LAST_STATE,
     ATTR_LAST_WAKE_UP,
+    ROBOT_MODELS,
+    ROBOT_STATES,
     ROBOT_WORKING_STATES,
     ROBOT_WAKE_UP_INTERVAL,
+    ROBOT_ERRORS,
 )
 
 
@@ -79,12 +88,16 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
             self.data[robot_imei] = {
                 CONF_ROBOT_NAME: robot_name,
                 CONF_ROBOT_IMEI: robot_imei,
-                ATTR_SERIAL: None,
-                ATTR_SW_VERSION: None,
-                ATTR_STATE: 0,
+                ATTR_STATE: None,
+                ATTR_ICON: None,
                 ATTR_WORKING: False,
+                ATTR_AVAILABLE: False,
                 ATTR_ERROR: 0,
                 ATTR_LOCATION: None,
+                ATTR_SERIAL: None,
+                ATTR_MANUFACTURER: MANUFACTURER,
+                ATTR_MODEL: None,
+                ATTR_SW_VERSION: None,
                 ATTR_CONNECTED: False,
                 ATTR_LAST_COMM: None,
                 ATTR_LAST_SEEN: None,
@@ -242,11 +255,14 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
         # Start refreshing mower in coordinator from fetched API data
         if "alarms" in data and "robot_state" in data["alarms"]:
             robot_state = data["alarms"]["robot_state"]
-            mower[ATTR_STATE] = robot_state["state"]
-            mower[ATTR_WORKING] = robot_state["state"] in list(ROBOT_WORKING_STATES)
+            _state = robot_state["state"] if robot_state["state"] < len(ROBOT_STATES) else 0
+            mower[ATTR_STATE] = ROBOT_STATES[_state]["name"]
+            mower[ATTR_ICON] = ROBOT_STATES[_state]["icon"]
+            mower[ATTR_WORKING] = _state in list(ROBOT_WORKING_STATES)
+            mower[ATTR_AVAILABLE] = _state > 0
             # msg not always available
             if "msg" in robot_state:
-                mower[ATTR_ERROR] = int(robot_state["msg"])
+                mower[ATTR_ERROR] = ROBOT_ERRORS.get(int(robot_state["msg"]), None)
             # latitude and longitude not always available
             if "lat" in robot_state and "lng" in robot_state:
                 mower[ATTR_LOCATION] = {
@@ -257,6 +273,10 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
             # In some cases, robot_serial is not available
             if "robot_serial" in data["attrs"]:
                 mower[ATTR_SERIAL] = data["attrs"]["robot_serial"]["value"]
+                if len(mower[ATTR_SERIAL]) > 5:
+                    mower[ATTR_MODEL] = mower[ATTR_SERIAL][0:6]
+                    if mower[ATTR_MODEL] in ROBOT_MODELS:
+                        mower[ATTR_MODEL] = ROBOT_MODELS[mower[ATTR_MODEL]]
             # In some cases, program_version is not available
             if "program_version" in data["attrs"]:
                 mower[ATTR_SW_VERSION] = data["attrs"]["program_version"]["value"]
