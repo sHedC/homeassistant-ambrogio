@@ -12,7 +12,6 @@ from datetime import (
 
 from homeassistant.core import HomeAssistant
 from homeassistant.const import (
-    ATTR_NAME,
     ATTR_ICON,
     ATTR_STATE,
     ATTR_LOCATION,
