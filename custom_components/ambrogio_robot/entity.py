@@ -79,9 +79,13 @@ class AmbrogioRobotEntity(CoordinatorEntity):
 
         self.entity_id = f"{entity_type}.{self._attr_unique_id}"
 
-    def _get_attributes(self) -> dict:
-        """Get the mower attributes of the current mower."""
-        return self.coordinator.data[self._imei]
+    def _get_attribute(
+        self,
+        attr: str,
+        default_value: any | None = None,
+    ) -> any:
+        """Get attribute of the current mower."""
+        return self.coordinator.data.get(self._robot_imei, {}).get(attr, default_value)
 
     def _update_extra_state_attributes(self) -> None:
         """Update extra attributes."""

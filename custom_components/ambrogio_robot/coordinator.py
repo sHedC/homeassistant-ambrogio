@@ -74,9 +74,9 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
         self.robots = robots
         self.client = client
 
-        self.mower_data = {}
+        self.data = {}
         for robot_imei, robot_name in self.robots.items():
-            self.mower_data[robot_imei] = {
+            self.data[robot_imei] = {
                 CONF_ROBOT_NAME: robot_name,
                 CONF_ROBOT_IMEI: robot_imei,
                 ATTR_SERIAL: None,
@@ -133,7 +133,7 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
 
             # TODO
             LOGGER.debug("_async_update_data")
-            LOGGER.debug(self.mower_data)
+            LOGGER.debug(self.data)
 
             # If one or more lawn mower(s) working, increase update_interval
             if self.has_working_mowers():
@@ -144,7 +144,7 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
             if suggested_update_interval != self.update_interval:
                 self.update_interval = suggested_update_interval
                 LOGGER.info("Update update_interval, because lawn mower(s) changed state from not working to working or vice versa.")
-            return self.mower_data
+            return self.data
         except AmbrogioRobotApiClientAuthenticationError as exception:
             raise ConfigEntryAuthFailed(exception) from exception
         except AmbrogioRobotApiClientError as exception:
@@ -159,20 +159,20 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
         imei: str,
     ) -> dict[str, any] | None:
         """Get attributes of an given lawn mower."""
-        return self.mower_data.get(imei, None)
+        return self.data.get(imei, None)
 
     def has_working_mowers(
         self,
     ) -> bool:
         """Count the working lawn mowers."""
-        count_helper = [v['working'] for k, v in self.mower_data.items() if v.get('working')]
+        count_helper = [v['working'] for k, v in self.data.items() if v.get('working')]
         return len(count_helper) > 0
 
     async def async_fetch_all_mowers(
         self,
     ) -> None:
         """Fetch data for all mowers."""
-        mower_imeis = list(self.mower_data.keys())
+        mower_imeis = list(self.data.keys())
         if len(mower_imeis) == 0:
             return None
 
@@ -204,7 +204,7 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
             for mower in (
                 mower
                 for mower in result_list
-                if "key" in mower and mower["key"] in self.mower_data
+                if "key" in mower and mower["key"] in self.data
             ):
                 await self.async_update_mower(mower)
 
@@ -288,7 +288,7 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
             # Set new state to last stateus
             mower[ATTR_LAST_STATE] = mower.get(ATTR_STATE)
 
-        self.mower_data[imei] = mower
+        self.data[imei] = mower
 
     async def async_prepare_for_command(
         self,
@@ -341,7 +341,7 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
         """Send command wake_up to lawn nower."""
         LOGGER.debug(f"wake_up: {imei}")
         try:
-            self.mower_data[imei][ATTR_LAST_WAKE_UP] = self._get_datetime_now()
+            self.data[imei][ATTR_LAST_WAKE_UP] = self._get_datetime_now()
             return await self.client.execute(
                 "sms.send",
                 {
