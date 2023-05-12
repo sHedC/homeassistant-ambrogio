@@ -143,7 +143,7 @@ ROBOT_MODELS = {
     "AM060L": "L60 Elite", # ?
     "AM060P": "L60 Elite S+", # ?
     "AM085L": "L85 Elite", # ?
-    #"AM095L": "", # DB:1082
+    "AM095L": "Quad Elite 4WD",
     "AM250D": "L250 Deluxe", # ?
     "AM250L": "L250i Elite",
     "AM250P": "L250i Elite S+",# ?
@@ -468,5 +468,5 @@ ROBOT_ERRORS = {
     5004: "unexpected_shutdown_work",
     5005: "unexpected_shutdown_work_pause",
     5006: "unexpected_shutdown_done",
-    5008: "unexpected_shutdown_error_1",
+    5008: "unexpected_shutdown_error",
 }
