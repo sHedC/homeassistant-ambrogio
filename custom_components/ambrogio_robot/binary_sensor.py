@@ -2,6 +2,9 @@
 from __future__ import annotations
 
 from homeassistant.core import HomeAssistant
+from homeassistant.const import (
+    ATTR_STATE,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -12,7 +15,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     DOMAIN,
-    ROBOT_ERRORS,
+    ATTR_ERROR,
 )
 from .coordinator import AmbrogioDataUpdateCoordinator
 from .entity import AmbrogioRobotEntity
@@ -69,13 +72,13 @@ class AmbrogioRobotBinarySensor(AmbrogioRobotEntity, BinarySensorEntity):
     def _update_extra_state_attributes(self) -> None:
         """Update extra attributes."""
         if self._entity_key == "error":
-            if self._state == 4:
+            if self._get_attribute(ATTR_STATE) == "fail":
                 self._additional_extra_state_attributes = {
-                    "reason": ROBOT_ERRORS.get(self._error, "unknown"),
+                    "reason": self._get_attribute(ATTR_ERROR, "unknown"),
                 }
 
     @property
     def is_on(self) -> bool:
         """Return true if the binary_sensor is on."""
         if self._entity_key == "error":
-            return self._state == 4
+            return self._get_attribute(ATTR_STATE) == "fail"
