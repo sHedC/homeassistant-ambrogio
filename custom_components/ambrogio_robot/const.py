@@ -24,6 +24,9 @@ API_DATETIME_FORMAT_DEFAULT = "%Y-%m-%dT%H:%M:%S.%f%z"
 API_DATETIME_FORMAT_FALLBACK = "%Y-%m-%dT%H:%M:%S%z"
 API_ACK_TIMEOUT = 30
 
+UPDATE_INTERVAL_DEFAULT = 300
+UPDATE_INTERVAL_WORKING = 60
+
 CONF_CONFIRM = "confirm"
 CONF_MOWERS = "mowers"
 CONF_ROBOT_NAME = "robot_name"
@@ -31,11 +34,15 @@ CONF_ROBOT_IMEI = "robot_imei"
 CONF_SELECTED_ROBOT = "selected_robot"
 
 ATTR_SERIAL = "serial"
+ATTR_WORKING = "working"
 ATTR_ERROR = "error"
+ATTR_AVAILABLE = "available"
 ATTR_CONNECTED = "connected"
 ATTR_LAST_COMM = "last_communication"
 ATTR_LAST_SEEN = "last_seen"
 ATTR_LAST_PULL = "last_pull"
+ATTR_LAST_STATE = "last_state"
+ATTR_LAST_WAKE_UP = "last_wake_up"
 
 SERVICE_SET_PROFILE = "set_profile"
 SERVICE_SET_PROFILE_SCHEMA = vol.Schema(
@@ -48,7 +55,6 @@ SERVICE_WORK_NOW = "work_now"
 SERVICE_WORK_NOW_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_DEVICE_ID): cv.entity_ids_or_uuids,
-        vol.Optional("area"): vol.All(vol.Coerce(int), vol.Range(min=1, max=10)),
     }
 )
 SERVICE_WORK_FOR = "work_for"
@@ -119,6 +125,37 @@ SERVICE_KEEP_OUT_SCHEMA = vol.Schema(
     }
 )
 
+ROBOT_MODELS = {
+    "AM015D": "Fifteen Deluxe", # ?
+    "AM020D": "Twenty Deluxe", # ?
+    "AM020L": "Twenty Elite",
+    "AM020P": "Twenty Elite S+", # ?
+    "AM020R": "Twenty ZR", # ?
+    "AM025D": "Twenty 25 Deluxe", # ?
+    "AM025L": "Twenty 25 Elite", # ?
+    "AM029D": "Twenty 29 Deluxe", # ?
+    "AM029L": "Twenty 29 Elite", # ?
+    "AM032D": "L32 Deluxe", # ?
+    "AM035B": "L35 Basic",
+    "AM035D": "L35 Deluxe",
+    "AM040B": "4.0 Basic", # ???
+    "AM040L": "4.0 Elite", # ???
+    "AM043L": "4.36 Elite",
+    "AM060L": "L60 Elite", # ?
+    "AM060P": "L60 Elite S+", # ?
+    "AM085L": "L85 Elite", # ?
+    "AM095L": "Quad Elite 4WD",
+    "AM250D": "L250 Deluxe", # ?
+    "AM250L": "L250i Elite",
+    "AM250P": "L250i Elite S+",# ?
+    "AM350L": "L350i Elite", # ?
+    "AM400B": "L400i Basic", # ?
+    "AM400D": "L400i Deluxe", # ?
+    "AM400L": "L400 Elite", # ?
+    #"AM450B": "", # DB:21
+    #"AM450D": "", # DB:99
+}
+
 ROBOT_STATES = [
     {
         "name" : "unknown",
@@ -181,6 +218,8 @@ ROBOT_STATES = [
         "color": "#E61EDC",
     },
 ]
+ROBOT_WORKING_STATES = [2, 6, 7, 8, 11]
+ROBOT_WAKE_UP_INTERVAL = 300
 
 ROBOT_ERRORS = {
     0: "bus_error",
@@ -430,5 +469,5 @@ ROBOT_ERRORS = {
     5004: "unexpected_shutdown_work",
     5005: "unexpected_shutdown_work_pause",
     5006: "unexpected_shutdown_done",
-    5008: "unexpected_shutdown_error_1",
+    5008: "unexpected_shutdown_error",
 }

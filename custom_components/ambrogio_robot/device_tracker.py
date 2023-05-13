@@ -1,17 +1,20 @@
 """Sensor platform for Ambrogio Robot."""
 from __future__ import annotations
 
+from homeassistant.core import HomeAssistant
+from homeassistant.const import (
+    ATTR_LOCATION,
+    ATTR_LATITUDE,
+    ATTR_LONGITUDE,
+)
 from homeassistant.components.device_tracker import SOURCE_TYPE_GPS
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
-    # LOGGER,
     DOMAIN,
-    # ROBOT_STATES,
 )
 from .coordinator import AmbrogioDataUpdateCoordinator
 from .entity import AmbrogioRobotEntity
@@ -69,13 +72,13 @@ class AmbrogioRobotDeviceTracker(AmbrogioRobotEntity, TrackerEntity):
     @property
     def latitude(self) -> float | None:
         """Return latitude value of the device."""
-        location = self._location.get("latitude", None)
+        location = self._get_attribute(ATTR_LOCATION, {}).get(ATTR_LATITUDE, None)
         return location if location else None
 
     @property
     def longitude(self) -> float | None:
         """Return longitude value of the device."""
-        location = self._location.get("longitude", None)
+        location = self._get_attribute(ATTR_LOCATION, {}).get(ATTR_LONGITUDE, None)
         return location if location else None
 
     @property
