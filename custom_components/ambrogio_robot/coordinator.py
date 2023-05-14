@@ -92,7 +92,7 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
                 ATTR_WORKING: False,
                 ATTR_AVAILABLE: False,
                 ATTR_ERROR: 0,
-                ATTR_LOCATION: None,
+                ATTR_LOCATION: {},
                 ATTR_SERIAL: None,
                 ATTR_MANUFACTURER: MANUFACTURER,
                 ATTR_MODEL: None,
