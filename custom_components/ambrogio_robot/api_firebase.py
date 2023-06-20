@@ -7,8 +7,7 @@ import aiohttp
 URL_BASE = "https://www.googleapis.com"
 VERIFY_PASSWORD = "/identitytoolkit/v3/relyingparty/verifyPassword"
 
-API_KEY = "AIzaSyCUGSbVrwZ3X7BHU6oiUSmdzQwx-QXypUI"
-ACCESS_TOKEN = ""
+APP_ID = "AIzaSyCUGSbVrwZ3X7BHU6oiUSmdzQwx-QXypUI"
 
 
 class AmbrogioRobotAuthException(Exception):
@@ -45,7 +44,7 @@ class AmbrogioRobotFirebaseAPI:
         response = await self._session.post(
             urljoin(
                 URL_BASE,
-                f"{VERIFY_PASSWORD}?key={API_KEY}",
+                f"{VERIFY_PASSWORD}?key={APP_ID}",
             ),
             data=json.dumps(auth_data),
             headers={
@@ -66,3 +65,7 @@ class AmbrogioRobotFirebaseAPI:
             "SessionToken": response_json["idToken"],
         }
         return valid_data
+
+    async def get_robots(self) -> dict:
+        """Get the Garage Robots."""
+        return {}
