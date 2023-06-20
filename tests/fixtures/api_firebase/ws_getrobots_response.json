@@ -1,0 +1,23 @@
+{
+    "t": "d",
+    "d": {
+        "b": {
+            "p": "robots/ambrogio/access-token",
+            "d": {
+                "A4:34:F1:22:54:76": {
+                    "boardserial": "AM1234556343434",
+                    "btAddress": "A3:23:F2:44:33:22",
+                    "imei": "0123456789012",
+                    "modelType": "",
+                    "name": "Robot Name",
+                    "password": "1234",
+                    "programId": 141,
+                    "remoteDisplayAvailable": true,
+                    "revision": 56898,
+                    "timestamp": 1684264633340
+                }
+            }
+        },
+        "a": "d"
+    }
+}
