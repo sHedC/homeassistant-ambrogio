@@ -1,17 +1,25 @@
 """The API for accessing firebase used by the App."""
+import logging
+
 from urllib.parse import urljoin
 import json
 
 import aiohttp
 
-URL_BASE = "https://www.googleapis.com"
+_LOGGER: logging.Logger = logging.getLogger(__package__)
+
+GOOGLEAPIS_URL = "https://www.googleapis.com"
 VERIFY_PASSWORD = "/identitytoolkit/v3/relyingparty/verifyPassword"
+
+FIREBASE_URL = "wss://centrosistemi-ambrogioremote.firebaseio.com"
+FIREBASE_DB = "centrosistemi-ambrogioremote"
+FIREBASE_VER = "5"
 
 APP_ID = "AIzaSyCUGSbVrwZ3X7BHU6oiUSmdzQwx-QXypUI"
 
 
-class AmbrogioRobotAuthException(Exception):
-    """Exception Ambrogio Auth Exceptions."""
+class AmbrogioRobotException(Exception):
+    """Exception Ambrogio Exceptions."""
 
     def __init__(self, status, message):
         """Initialize."""
@@ -30,9 +38,6 @@ class AmbrogioRobotFirebaseAPI:
         """Initiate Firebase API."""
         self._session = session
 
-        # TODO: Get from Web Socket Send Access Token as Param Key
-        # Returns Configured Robots
-
     async def verify_password(self, email: str, password: str) -> dict:
         """Verify the username and password with the googleapis site."""
         auth_data: dict = {
@@ -43,7 +48,7 @@ class AmbrogioRobotFirebaseAPI:
 
         response = await self._session.post(
             urljoin(
-                URL_BASE,
+                GOOGLEAPIS_URL,
                 f"{VERIFY_PASSWORD}?key={APP_ID}",
             ),
             data=json.dumps(auth_data),
@@ -56,7 +61,7 @@ class AmbrogioRobotFirebaseAPI:
         response_json = await response.json()
 
         if "error" in response_json:
-            raise AmbrogioRobotAuthException(
+            raise AmbrogioRobotException(
                 response_json["error"]["code"], response_json["error"]["message"]
             )
 
@@ -66,6 +71,47 @@ class AmbrogioRobotFirebaseAPI:
         }
         return valid_data
 
-    async def get_robots(self) -> dict:
+    async def get_robots(self, access_token: str, session_token: str) -> dict:
         """Get the Garage Robots."""
-        return {}
+        robot_list = {}
+        async with self._session.ws_connect(
+            urljoin(FIREBASE_URL, f".ws?ns={FIREBASE_DB}&v={FIREBASE_VER}")
+        ) as ws_api:
+            # Receive response from connection.
+            response_json = await ws_api.receive_json()
+            _LOGGER.debug("WS Connect Response: %s", response_json)
+            check = response_json["d"]["d"]
+            if not isinstance(check, dict):
+                _LOGGER.error("WS Connect Error: %s", check)
+                raise AmbrogioRobotException(1, check)
+
+            # Authorize the Session Token
+            send_msg = (
+                '{"t":"d","d":{"a":"auth","r":1,"b":{"cred":"' + session_token + '"}}}'
+            )
+            await ws_api.send_str(send_msg)
+
+            # Authorize response should be "ok"
+            response_json = await ws_api.receive_json()
+            _LOGGER.debug("WS Auth Response: %s", response_json)
+            if response_json["d"]["b"]["s"] != "ok":
+                _LOGGER.error("WS Auth Failed.")
+
+            # Request the Robot List
+            send_msg = (
+                '{"t":"d","d":{"a":"q","r":2,"b":{"p":"robots\\/ambrogio\\/'
+                + access_token
+                + '","h":""}}}'
+            )
+            await ws_api.send_str(send_msg)
+
+            # Should respond with list of robots.
+            response_json = await ws_api.receive_json()
+            _LOGGER.debug("WS Robot List Response: %s", response_json)
+
+            await ws_api.close()
+
+            # Robots are under d->b->d, shoudl return a list.
+            robot_list = response_json["d"]["b"]["d"]
+
+        return robot_list

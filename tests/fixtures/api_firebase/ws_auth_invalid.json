@@ -1,0 +1,10 @@
+{
+    "t": "d",
+    "d": {
+        "r": 1,
+        "b": {
+            "s": "invalid_token",
+            "d": "Could not parse auth token."
+        }
+    }
+}

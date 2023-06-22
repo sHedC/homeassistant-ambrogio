@@ -21,6 +21,8 @@ from custom_components.ambrogio_robot.const import (
     CONF_MOWERS,
 )
 
+FIREBASE_TEST_VER = "5"
+
 TEST_CONFIGDATA = {
     DOMAIN: {
         CONF_API_TOKEN: "apitoken",
@@ -97,7 +99,9 @@ def skip_notifications_fixture():
 @pytest.fixture(autouse=True)
 def api_firebase_url():
     """Patch the URL Base for the firebase api."""
-    with patch("custom_components.ambrogio_robot.api_firebase.URL_BASE", ""):
+    with patch(
+        "custom_components.ambrogio_robot.api_firebase.GOOGLEAPIS_URL", ""
+    ), patch("custom_components.ambrogio_robot.api_firebase.FIREBASE_URL", ""):
         yield
 
 
@@ -120,6 +124,52 @@ async def googleapis_auth(request: Request):
     )
 
 
+async def firebase_handler(request: Request):
+    """Websocket handler for firebase reqeusts."""
+    ws_response = web.WebSocketResponse()
+
+    if not ws_response.can_prepare(request):
+        return web.HTTPUpgradeRequired()
+
+    # Check connection details, Firebase Version & Database
+    await ws_response.prepare(request)
+    query = request.rel_url.query
+    if query["v"] != FIREBASE_TEST_VER:
+        msg = json.loads(load_fixture("api_firebase", "ws_firebase_version_error.json"))
+        await ws_response.send_json(msg)
+        await ws_response.close()
+        return ws_response
+    else:
+        msg = json.loads(load_fixture("api_firebase", "ws_setup_response.json"))
+        await ws_response.send_json(msg)
+
+    # Get Authorization Request, respond with correct message.
+    msg = await ws_response.receive_json()
+    token = msg["d"]["b"]["cred"]
+    if token != "google-token-id":
+        msg = json.loads(load_fixture("api_firebase", "ws_auth_invalid.json"))
+    else:
+        msg = json.loads(load_fixture("api_firebase", "ws_auth_response.json"))
+    await ws_response.send_json(msg)
+
+    # Get Request for Robots and Respond.
+    msg = await ws_response.receive_json()
+    robot: str = msg["d"]["b"]["p"]
+    access_token = robot.split("/")
+    msg = load_fixture("api_firebase", f"ws_getrobots_{access_token[2]}.json")
+
+    # If Access Token is invalid.
+    if msg is None:
+        msg = json.loads(load_fixture("api_firebase", "ws_getrobots_invalid.json"))
+    else:
+        msg = json.loads(msg)
+
+    await ws_response.send_json(msg)
+
+    await ws_response.close()
+    return ws_response
+
+
 @pytest.fixture
 def google_api(hass):
     """Fixture setup a web application."""
@@ -128,5 +178,6 @@ def google_api(hass):
     app.router.add_route(
         "POST", "/identitytoolkit/v3/relyingparty/verifyPassword", googleapis_auth
     )
+    app.router.add_route("GET", "/.ws", firebase_handler)
     async_setup_forwarded(app, True, [])
     return app
