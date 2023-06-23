@@ -2,13 +2,12 @@
 from __future__ import annotations
 
 import asyncio
-import pytz
-
 from datetime import (
     timedelta,
     datetime,
-    timezone,
+    UTC,
 )
+import pytz
 
 from homeassistant.core import HomeAssistant
 from homeassistant.const import (
@@ -118,7 +117,7 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
 
     def _get_datetime_now(self) -> datetime:
         """Get current datetime in UTC."""
-        return datetime.utcnow().replace(tzinfo=timezone.utc)
+        return datetime.utcnow().replace(tzinfo=UTC)
 
     def _get_datetime_from_duration(
         self,
@@ -156,7 +155,8 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
             if suggested_update_interval != self.update_interval:
                 self.update_interval = suggested_update_interval
                 LOGGER.info(
-                    "Update update_interval, because lawn mower(s) changed state from not working to working or vice versa."
+                    "Update update_interval, because lawn mower(s) "
+                    "changed state from not working to working or vice versa."
                 )
             return self.data
         except AmbrogioRobotApiClientAuthenticationError as exception:
@@ -405,7 +405,7 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
         imei: str,
     ) -> bool:
         """Send command work_now to lawn nower."""
-        LOGGER.debug(f"work_now: {imei}")
+        LOGGER.debug("work_now: %s", imei)
         try:
             await self.async_prepare_for_command(imei)
             return await self.client.execute(
@@ -427,7 +427,7 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
         area: int | None = None,
     ) -> bool:
         """Prepare command work_for."""
-        LOGGER.debug(f"work_for: {imei}")
+        LOGGER.debug("work_for: %s", imei)
         _target = self._get_datetime_from_duration(duration)
         await self.async_work_until(
             imei=imei,
@@ -444,7 +444,7 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
         area: int | None = None,
     ) -> bool:
         """Send command work_until to lawn nower."""
-        LOGGER.debug(f"work_until: {imei}")
+        LOGGER.debug("work_until: %s", imei)
         _params = {
             "hh": hours,
             "mm": minutes,
@@ -473,7 +473,7 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
         imei: str,
     ) -> bool:
         """Send command border_cut to lawn nower."""
-        LOGGER.debug(f"border_cut: {imei}")
+        LOGGER.debug("border_cut: %s", imei)
         try:
             await self.async_prepare_for_command(imei)
             return await self.client.execute(
@@ -493,7 +493,7 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
         imei: str,
     ) -> bool:
         """Send command charge_now to lawn nower."""
-        LOGGER.debug(f"charge_now: {imei}")
+        LOGGER.debug("charge_now: %s", imei)
         try:
             await self.async_prepare_for_command(imei)
             return await self.client.execute(
@@ -530,7 +530,7 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
         weekday: int,
     ) -> bool:
         """Send command charge_until to lawn nower."""
-        LOGGER.debug(f"charge_until: {imei}")
+        LOGGER.debug("charge_until: %s", imei)
         try:
             await self.async_prepare_for_command(imei)
             return await self.client.execute(
@@ -555,7 +555,7 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
         imei: str,
     ) -> bool:
         """Send command trace_position to lawn nower."""
-        LOGGER.debug(f"trace_position: {imei}")
+        LOGGER.debug("trace_position: %s", imei)
         try:
             await self.async_prepare_for_command(imei)
             return await self.client.execute(
@@ -581,7 +581,7 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
         index: int | None = None,
     ) -> bool:
         """Send command keep_out to lawn nower."""
-        LOGGER.debug(f"keep_out: {imei}")
+        LOGGER.debug("keep_out: %s", imei)
         _params = {
             "latitude": latitude,
             "longitude": longitude,
