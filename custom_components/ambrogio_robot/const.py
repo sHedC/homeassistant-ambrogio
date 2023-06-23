@@ -19,7 +19,7 @@ VERSION = "0.0.0"
 MANUFACTURER = "Zucchetti Centro Sistemi"
 ATTRIBUTION = "Data provided gently by Telit IoT Platform"
 
-API_TOKEN = "DJMYYngGNEit40vA"
+API_KEY = "DJMYYngGNEit40vA"
 API_DATETIME_FORMAT_DEFAULT = "%Y-%m-%dT%H:%M:%S.%f%z"
 API_DATETIME_FORMAT_FALLBACK = "%Y-%m-%dT%H:%M:%S%z"
 API_ACK_TIMEOUT = 30
@@ -28,7 +28,6 @@ UPDATE_INTERVAL_DEFAULT = 300
 UPDATE_INTERVAL_WORKING = 60
 
 CONF_CONFIRM = "confirm"
-CONF_MOWERS = "mowers"
 CONF_ROBOT_NAME = "robot_name"
 CONF_ROBOT_IMEI = "robot_imei"
 CONF_SELECTED_ROBOT = "selected_robot"
@@ -126,95 +125,95 @@ SERVICE_KEEP_OUT_SCHEMA = vol.Schema(
 )
 
 ROBOT_MODELS = {
-    "AM015D": "Fifteen Deluxe", # ?
-    "AM020D": "Twenty Deluxe", # ?
+    "AM015D": "Fifteen Deluxe",  # ?
+    "AM020D": "Twenty Deluxe",  # ?
     "AM020L": "Twenty Elite",
-    "AM020P": "Twenty Elite S+", # ?
-    "AM020R": "Twenty ZR", # ?
-    "AM025D": "Twenty 25 Deluxe", # ?
-    "AM025L": "Twenty 25 Elite", # ?
-    "AM029D": "Twenty 29 Deluxe", # ?
-    "AM029L": "Twenty 29 Elite", # ?
-    "AM032D": "L32 Deluxe", # ?
+    "AM020P": "Twenty Elite S+",  # ?
+    "AM020R": "Twenty ZR",  # ?
+    "AM025D": "Twenty 25 Deluxe",  # ?
+    "AM025L": "Twenty 25 Elite",  # ?
+    "AM029D": "Twenty 29 Deluxe",  # ?
+    "AM029L": "Twenty 29 Elite",  # ?
+    "AM032D": "L32 Deluxe",  # ?
     "AM035B": "L35 Basic",
     "AM035D": "L35 Deluxe",
-    "AM040B": "4.0 Basic", # ???
-    "AM040L": "4.0 Elite", # ???
+    "AM040B": "4.0 Basic",  # ???
+    "AM040L": "4.0 Elite",  # ???
     "AM043L": "4.36 Elite",
-    "AM060L": "L60 Elite", # ?
-    "AM060P": "L60 Elite S+", # ?
-    "AM085L": "L85 Elite", # ?
+    "AM060L": "L60 Elite",  # ?
+    "AM060P": "L60 Elite S+",  # ?
+    "AM085L": "L85 Elite",  # ?
     "AM095L": "Quad Elite 4WD",
-    "AM250D": "L250 Deluxe", # ?
+    "AM250D": "L250 Deluxe",  # ?
     "AM250L": "L250i Elite",
-    "AM250P": "L250i Elite S+",# ?
-    "AM350L": "L350i Elite", # ?
-    "AM400B": "L400i Basic", # ?
-    "AM400D": "L400i Deluxe", # ?
-    "AM400L": "L400 Elite", # ?
-    #"AM450B": "", # DB:21
-    #"AM450D": "", # DB:99
+    "AM250P": "L250i Elite S+",  # ?
+    "AM350L": "L350i Elite",  # ?
+    "AM400B": "L400i Basic",  # ?
+    "AM400D": "L400i Deluxe",  # ?
+    "AM400L": "L400 Elite",  # ?
+    # "AM450B": "", # DB:21
+    # "AM450D": "", # DB:99
 }
 
 ROBOT_STATES = [
     {
-        "name" : "unknown",
-        "icon" : "mdi:crosshairs-question",
+        "name": "unknown",
+        "icon": "mdi:crosshairs-question",
         "color": "#000000",
     },
     {
-        "name" : "charge",
-        "icon" : "mdi:battery-charging",
+        "name": "charge",
+        "icon": "mdi:battery-charging",
         "color": "#CCCC00",
     },
     {
-        "name" : "work",
-        "icon" : "mdi:state-machine",
+        "name": "work",
+        "icon": "mdi:state-machine",
         "color": "#007700",
     },
     {
-        "name" : "pause",
-        "icon" : "mdi:pause",
+        "name": "pause",
+        "icon": "mdi:pause",
         "color": "#0000FF",
     },
     {
-        "name" : "fail",
-        "icon" : "mdi:alert-circle",
+        "name": "fail",
+        "icon": "mdi:alert-circle",
         "color": "#FF0000",
     },
     {
-        "name" : "nosignal",
-        "icon" : "mdi:signal-off",
+        "name": "nosignal",
+        "icon": "mdi:signal-off",
         "color": "#FF7700",
     },
     {
-        "name" : "gotostation",
-        "icon" : "mdi:ev-station",
+        "name": "gotostation",
+        "icon": "mdi:ev-station",
         "color": "#FFFF00",
     },
     {
-        "name" : "gotoarea",
-        "icon" : "mdi:grass",
+        "name": "gotoarea",
+        "icon": "mdi:grass",
         "color": "#00FF00",
     },
     {
-        "name" : "bordercut",
-        "icon" : "mdi:scissors-cutting",
+        "name": "bordercut",
+        "icon": "mdi:scissors-cutting",
         "color": "#00CC00",
     },
     {
-        "name" : "expired",
-        "icon" : "mdi:clock-alert",
+        "name": "expired",
+        "icon": "mdi:clock-alert",
         "color": "#000000",
     },
     {
-        "name" : "renewed",
-        "icon" : "mdi:clock-check",
+        "name": "renewed",
+        "icon": "mdi:clock-check",
         "color": "#00B5B5",
     },
     {
-        "name" : "work_standby",
-        "icon" : "mdi:power-standby",
+        "name": "work_standby",
+        "icon": "mdi:power-standby",
         "color": "#E61EDC",
     },
 ]

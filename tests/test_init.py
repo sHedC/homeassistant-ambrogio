@@ -1,7 +1,9 @@
 """Test Ambrogio Robot Setup process."""
 from unittest.mock import patch
 import pytest
+import json
 
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntryState
 
@@ -13,6 +15,8 @@ from custom_components.ambrogio_robot import (
 )
 from custom_components.ambrogio_robot.coordinator import AmbrogioDataUpdateCoordinator
 from custom_components.ambrogio_robot.const import DOMAIN
+
+from .conftest import load_fixture
 
 
 @pytest.fixture(autouse=True)
@@ -38,6 +42,14 @@ async def test_setup_and_reload(
     entry.add_to_hass(hass)
 
     with patch(
+        "custom_components.ambrogio_robot.api_firebase.AmbrogioRobotFirebaseAPI.get_robots",
+        return_value=json.loads(
+            load_fixture("api_firebase", "ws_getrobots_token1.json")
+        )["d"]["b"]["d"],
+    ), patch(
+        "custom_components.ambrogio_robot.api_firebase.AmbrogioRobotFirebaseAPI.verify_password",
+        return_value={CONF_ACCESS_TOKEN: "google-token", CONF_API_TOKEN: "robot1"},
+    ), patch(
         (
             "custom_components.ambrogio_robot.coordinator."
             "AmbrogioDataUpdateCoordinator._async_update_data"
@@ -83,6 +95,14 @@ async def test_unload_entry(
 
     # Check the Config is initiated
     with patch(
+        "custom_components.ambrogio_robot.api_firebase.AmbrogioRobotFirebaseAPI.get_robots",
+        return_value=json.loads(
+            load_fixture("api_firebase", "ws_getrobots_token1.json")
+        )["d"]["b"]["d"],
+    ), patch(
+        "custom_components.ambrogio_robot.api_firebase.AmbrogioRobotFirebaseAPI.verify_password",
+        return_value={CONF_ACCESS_TOKEN: "google-token", CONF_API_TOKEN: "robot1"},
+    ), patch(
         (
             "custom_components.ambrogio_robot.coordinator."
             "AmbrogioDataUpdateCoordinator._async_update_data"

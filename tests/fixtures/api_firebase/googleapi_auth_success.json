@@ -1,9 +1,9 @@
 {
     "kind": "identitytoolkit#VerifyPasswordResponse",
-    "localId": "access-token",
+    "localId": "robot-api-token",
     "email": "user@email.com",
     "displayName": "First Last",
-    "idToken": "google-token-id",
+    "idToken": "google-access-token",
     "registered": true,
     "profilePicture": "https://profilepicture",
     "refreshToken": "google-refresh-token-key",

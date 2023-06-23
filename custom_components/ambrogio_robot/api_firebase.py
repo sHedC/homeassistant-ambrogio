@@ -6,7 +6,7 @@ import json
 
 import aiohttp
 
-_LOGGER: logging.Logger = logging.getLogger(__package__)
+_LOGGER: logging.Logger = logging.getLogger(__name__)
 
 GOOGLEAPIS_URL = "https://www.googleapis.com"
 VERIFY_PASSWORD = "/identitytoolkit/v3/relyingparty/verifyPassword"
@@ -59,19 +59,18 @@ class AmbrogioRobotFirebaseAPI:
         )
 
         response_json = await response.json()
-
         if "error" in response_json:
             raise AmbrogioRobotException(
                 response_json["error"]["code"], response_json["error"]["message"]
             )
 
         valid_data = {
-            "AccessToken": response_json["localId"],
-            "SessionToken": response_json["idToken"],
+            "api_token": response_json["localId"],
+            "access_token": response_json["idToken"],
         }
         return valid_data
 
-    async def get_robots(self, access_token: str, session_token: str) -> dict:
+    async def get_robots(self, access_token: str, api_token: str) -> dict:
         """Get the Garage Robots."""
         robot_list = {}
         async with self._session.ws_connect(
@@ -87,7 +86,7 @@ class AmbrogioRobotFirebaseAPI:
 
             # Authorize the Session Token
             send_msg = (
-                '{"t":"d","d":{"a":"auth","r":1,"b":{"cred":"' + session_token + '"}}}'
+                '{"t":"d","d":{"a":"auth","r":1,"b":{"cred":"' + access_token + '"}}}'
             )
             await ws_api.send_str(send_msg)
 
@@ -100,7 +99,7 @@ class AmbrogioRobotFirebaseAPI:
             # Request the Robot List
             send_msg = (
                 '{"t":"d","d":{"a":"q","r":2,"b":{"p":"robots\\/ambrogio\\/'
-                + access_token
+                + api_token
                 + '","h":""}}}'
             )
             await ws_api.send_str(send_msg)

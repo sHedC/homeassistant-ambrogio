@@ -5,12 +5,20 @@ from aiohttp import web
 
 import pytest
 
+from homeassistant.const import (
+    CONF_ACCESS_TOKEN,
+    CONF_API_TOKEN,
+    CONF_EMAIL,
+    CONF_PASSWORD,
+)
+
+from custom_components.ambrogio_robot import DOMAIN
 from custom_components.ambrogio_robot.api_firebase import (
     AmbrogioRobotFirebaseAPI,
     AmbrogioRobotException,
 )
 
-from .conftest import ClientSessionGenerator
+from .conftest import ClientSessionGenerator, TEST_CONFIGDATA
 
 
 async def test_verify_password(
@@ -21,10 +29,12 @@ async def test_verify_password(
     api = AmbrogioRobotFirebaseAPI(session)
     assert api is not None
 
-    result = await api.verify_password("user@email.com", "successpassword")
+    result = await api.verify_password(
+        TEST_CONFIGDATA[DOMAIN][CONF_EMAIL], TEST_CONFIGDATA[DOMAIN][CONF_PASSWORD]
+    )
     assert result != {}
-    assert result["SessionToken"] == "google-token-id"
-    assert result["AccessToken"] == "access-token"
+    assert result[CONF_API_TOKEN] == "robot-api-token"
+    assert result[CONF_ACCESS_TOKEN] == "google-access-token"
 
 
 async def test_invalid_password(
@@ -36,7 +46,7 @@ async def test_invalid_password(
     assert api is not None
 
     with pytest.raises(AmbrogioRobotException):
-        await api.verify_password("user@email.com", "failpassword")
+        await api.verify_password(TEST_CONFIGDATA[DOMAIN][CONF_EMAIL], "failpassword")
 
 
 async def test_invalid_email(
@@ -48,7 +58,9 @@ async def test_invalid_email(
     assert api is not None
 
     with pytest.raises(AmbrogioRobotException):
-        await api.verify_password("bad@email.com", "successpassword")
+        await api.verify_password(
+            "bad@email.com", TEST_CONFIGDATA[DOMAIN][CONF_PASSWORD]
+        )
 
 
 async def test_get_robots(
@@ -59,7 +71,7 @@ async def test_get_robots(
     api = AmbrogioRobotFirebaseAPI(session)
     assert api is not None
 
-    robot_list = await api.get_robots("token1", "google-token-id")
+    robot_list = await api.get_robots("google-access-token", "token1")
     assert robot_list != {}
 
 
@@ -71,7 +83,7 @@ async def test_invalid_token(
     api = AmbrogioRobotFirebaseAPI(session)
     assert api is not None
 
-    robot_list = await api.get_robots("no-token", "google-token-id")
+    robot_list = await api.get_robots("google-access-token", "no-token")
     assert robot_list == {}
 
 
@@ -85,4 +97,4 @@ async def test_wrong_firebase_version(
     assert api is not None
 
     with pytest.raises(AmbrogioRobotException):
-        await api.get_robots("access-token", "google-token-id")
+        await api.get_robots("agoogle-access-token", "token1")

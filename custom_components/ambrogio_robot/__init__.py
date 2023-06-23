@@ -9,14 +9,18 @@ from homeassistant.core import HomeAssistant
 from homeassistant.const import (
     CONF_API_TOKEN,
     CONF_ACCESS_TOKEN,
+    CONF_EMAIL,
+    CONF_PASSWORD,
     Platform,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
+from .api_firebase import AmbrogioRobotFirebaseAPI, AmbrogioRobotException
 from .const import (
+    API_KEY,
     DOMAIN,
-    CONF_MOWERS,
 )
 from .services import async_setup_services
 from .api import AmbrogioRobotApiClient
@@ -38,15 +42,34 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
 
     return True
 
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up this integration using UI."""
     hass.data.setdefault(DOMAIN, {})
+
+    # Get or update the list of robots from Firebase
+    try:
+        api_firebase = AmbrogioRobotFirebaseAPI(async_get_clientsession(hass))
+        tokens = await api_firebase.verify_password(
+            entry.data[CONF_EMAIL], entry.data[CONF_PASSWORD]
+        )
+        robots: dict = await api_firebase.get_robots(
+            tokens[CONF_ACCESS_TOKEN], tokens[CONF_API_TOKEN]
+        )
+    except AmbrogioRobotException as exp:
+        raise ConfigEntryAuthFailed from exp
+
+    # Build the Robot List to hand over.
+    robot_list: dict = {}
+    for robot in robots.values():
+        robot_list[robot["imei"]] = robot["name"]
+
     hass.data[DOMAIN][entry.entry_id] = coordinator = AmbrogioDataUpdateCoordinator(
         hass=hass,
-        robots=entry.options[CONF_MOWERS],
+        robots=robot_list,
         client=AmbrogioRobotApiClient(
-            api_key=entry.data[CONF_API_TOKEN],
-            access_token=entry.data[CONF_ACCESS_TOKEN],
+            api_key=API_KEY,
+            access_token=tokens[CONF_API_TOKEN],
             session=async_get_clientsession(hass),
         ),
     )

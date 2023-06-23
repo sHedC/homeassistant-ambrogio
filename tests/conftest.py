@@ -12,30 +12,19 @@ import pytest
 
 from homeassistant.components.http.forwarded import async_setup_forwarded
 from homeassistant.const import (
-    CONF_API_TOKEN,
-    CONF_ACCESS_TOKEN,
+    CONF_EMAIL,
+    CONF_PASSWORD,
 )
 
-from custom_components.ambrogio_robot.const import (
-    DOMAIN,
-    CONF_MOWERS,
-)
-
-FIREBASE_TEST_VER = "5"
-
-TEST_CONFIGDATA = {
-    DOMAIN: {
-        CONF_API_TOKEN: "apitoken",
-        CONF_ACCESS_TOKEN: "access_token",
-    }
-}
-TEST_CONFIGOPTIONS = {
-    DOMAIN: {
-        CONF_MOWERS: {"1234567890": "Some Mower"},
-    }
-}
+from custom_components.ambrogio_robot import DOMAIN
 
 ClientSessionGenerator = Callable[..., Coroutine[any, any, TestClient]]
+
+FIREBASE_TEST_VER = "5"
+TEST_CONFIGDATA = {
+    DOMAIN: {CONF_EMAIL: "user@email.com", CONF_PASSWORD: "successpassword"}
+}
+TEST_CONFIGOPTIONS = {DOMAIN: {}}
 
 
 @pytest.fixture
@@ -108,10 +97,13 @@ def api_firebase_url():
 async def googleapis_auth(request: Request):
     """Respond with the google apis authentication."""
     data = await request.json()
-    if data["email"] == "user@email.com" and data["password"] == "successpassword":
+    if (
+        data[CONF_EMAIL] == TEST_CONFIGDATA[DOMAIN][CONF_EMAIL]
+        and data[CONF_PASSWORD] == TEST_CONFIGDATA[DOMAIN][CONF_PASSWORD]
+    ):
         response_txt = load_fixture("api_firebase", "googleapi_auth_success.json")
     else:
-        if data["email"] != "user@email.com":
+        if data[CONF_EMAIL] != TEST_CONFIGDATA[DOMAIN][CONF_EMAIL]:
             response_txt = load_fixture("api_firebase", "googleapi_invalid_email.json")
         else:
             response_txt = load_fixture(
@@ -146,7 +138,7 @@ async def firebase_handler(request: Request):
     # Get Authorization Request, respond with correct message.
     msg = await ws_response.receive_json()
     token = msg["d"]["b"]["cred"]
-    if token != "google-token-id":
+    if token != "google-access-token":
         msg = json.loads(load_fixture("api_firebase", "ws_auth_invalid.json"))
     else:
         msg = json.loads(load_fixture("api_firebase", "ws_auth_response.json"))

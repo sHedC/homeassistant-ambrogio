@@ -140,7 +140,7 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self):
         """Update data via library."""
         try:
-            """Update all mowers."""
+            # Update all mowers.
             await self.async_fetch_all_mowers()
 
             # TODO
@@ -155,7 +155,9 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
             # Set suggested update_interval
             if suggested_update_interval != self.update_interval:
                 self.update_interval = suggested_update_interval
-                LOGGER.info("Update update_interval, because lawn mower(s) changed state from not working to working or vice versa.")
+                LOGGER.info(
+                    "Update update_interval, because lawn mower(s) changed state from not working to working or vice versa."
+                )
             return self.data
         except AmbrogioRobotApiClientAuthenticationError as exception:
             raise ConfigEntryAuthFailed(exception) from exception
@@ -177,7 +179,7 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
         self,
     ) -> bool:
         """Count the working lawn mowers."""
-        count_helper = [v['working'] for k, v in self.data.items() if v.get('working')]
+        count_helper = [v["working"] for k, v in self.data.items() if v.get("working")]
         return len(count_helper) > 0
 
     async def async_fetch_all_mowers(
@@ -204,10 +206,10 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
                     "attrs",
                     "createdOn",
                     "storage",
-                    "varBillingPlanCode"
+                    "varBillingPlanCode",
                 ],
                 "hideFields": True,
-                "keys": mower_imeis
+                "keys": mower_imeis,
             },
         )
         response = await self.client.get_response()
@@ -237,9 +239,7 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
         # Always update HA states after a command was executed.
         # API calls that change the lawn mower's state update the local object when
         # executing the command, so only the HA state needs further updates.
-        self.hass.async_create_task(
-            self._async_update_listeners()
-        )
+        self.hass.async_create_task(self._async_update_listeners())
         return response.get("connected", False)
 
     async def async_update_mower(
@@ -254,7 +254,9 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
         # Start refreshing mower in coordinator from fetched API data
         if "alarms" in data and "robot_state" in data["alarms"]:
             robot_state = data["alarms"]["robot_state"]
-            _state = robot_state["state"] if robot_state["state"] < len(ROBOT_STATES) else 0
+            _state = (
+                robot_state["state"] if robot_state["state"] < len(ROBOT_STATES) else 0
+            )
             mower[ATTR_STATE] = ROBOT_STATES[_state]["name"]
             mower[ATTR_ICON] = ROBOT_STATES[_state]["icon"]
             mower[ATTR_WORKING] = _state in list(ROBOT_WORKING_STATES)
@@ -282,29 +284,25 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
                 mower[ATTR_SW_VERSION] = f"r{_revision}"
         mower[ATTR_CONNECTED] = data.get("connected", False)
         if "lastCommunication" in data:
-            mower[ATTR_LAST_COMM] = self._convert_datetime_from_api(data["lastCommunication"])
+            mower[ATTR_LAST_COMM] = self._convert_datetime_from_api(
+                data["lastCommunication"]
+            )
         if "lastSeen" in data:
             mower[ATTR_LAST_SEEN] = self._convert_datetime_from_api(data["lastSeen"])
         mower[ATTR_LAST_PULL] = self._get_datetime_now()
 
         # If lawn mower is working send a wake_up command every ROBOT_WAKE_UP_INTERVAL seconds
-        if (
-            mower.get(ATTR_STATE) in ROBOT_WORKING_STATES
-            and (
-                mower.get(ATTR_LAST_WAKE_UP) is None
-                or (self._get_datetime_now() - mower.get(ATTR_LAST_WAKE_UP)).total_seconds() > ROBOT_WAKE_UP_INTERVAL
-            )
+        if mower.get(ATTR_STATE) in ROBOT_WORKING_STATES and (
+            mower.get(ATTR_LAST_WAKE_UP) is None
+            or (self._get_datetime_now() - mower.get(ATTR_LAST_WAKE_UP)).total_seconds()
+            > ROBOT_WAKE_UP_INTERVAL
         ):
-            self.hass.async_create_task(
-                self.async_wake_up(imei)
-            )
+            self.hass.async_create_task(self.async_wake_up(imei))
         # State changed
         if mower.get(ATTR_STATE) != mower.get(ATTR_LAST_STATE):
             # If lawn mower is now working send trace_position command
             if mower.get(ATTR_STATE) in ROBOT_WORKING_STATES:
-                self.hass.async_create_task(
-                    self.async_trace_position(imei)
-                )
+                self.hass.async_create_task(self.async_trace_position(imei))
             # Set new state to last stateus
             mower[ATTR_LAST_STATE] = mower.get(ATTR_STATE)
 
@@ -332,8 +330,12 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
                 return True
 
             # Send wake up command if last attempt was more than 60 seconds ago
-            if (mower.get(ATTR_LAST_WAKE_UP) is None
-                or (self._get_datetime_now() - mower.get(ATTR_LAST_WAKE_UP)).total_seconds() > 60
+            if (
+                mower.get(ATTR_LAST_WAKE_UP) is None
+                or (
+                    self._get_datetime_now() - mower.get(ATTR_LAST_WAKE_UP)
+                ).total_seconds()
+                > 60
             ):
                 await self.async_wake_up(imei)
 
@@ -359,7 +361,7 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
         imei: str,
     ) -> bool:
         """Send command wake_up to lawn nower."""
-        LOGGER.debug(f"wake_up: {imei}")
+        LOGGER.debug("wake_up: %s", imei)
         try:
             self.data[imei][ATTR_LAST_WAKE_UP] = self._get_datetime_now()
             return await self.client.execute(
@@ -380,7 +382,7 @@ class AmbrogioDataUpdateCoordinator(DataUpdateCoordinator):
         profile: int,
     ) -> bool:
         """Send command set_profile to lawn nower."""
-        LOGGER.debug(f"set_profile: {imei}")
+        LOGGER.debug("set_profile: %s", imei)
         try:
             await self.async_prepare_for_command(imei)
             return await self.client.execute(
