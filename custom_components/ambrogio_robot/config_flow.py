@@ -41,8 +41,12 @@ class AmbrogioFlowHandler(ConfigFlow, domain=DOMAIN):
             if CONF_ERROR in result:
                 _errors["base"] = result[CONF_ERROR]
             else:
+                # Setup the Unique ID and check if already configured
+                await self.async_set_unique_id(user_input[CONF_EMAIL])
+                self._abort_if_unique_id_configured()
+
                 return self.async_create_entry(
-                    title=user_input[CONF_NAME], data=user_input
+                    title=user_input[CONF_EMAIL], data=user_input
                 )
 
         return self.async_show_form(

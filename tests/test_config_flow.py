@@ -1,8 +1,6 @@
 """Test Ambrogio config flow."""
 from unittest.mock import patch
 
-import pytest
-
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.core import HomeAssistant
 
@@ -109,4 +107,47 @@ async def test_form_login_setup(hass: HomeAssistant):
         )
 
     assert setup_result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert setup_result["title"] == "garage_name"
+    assert setup_result["title"] == "some.random@email.com"
+
+
+async def test_form_duplicate_check(hass: HomeAssistant):
+    """Test for duplicate setup check and abort."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "custom_components.ambrogio_robot.config_flow.authenticate",
+        return_value={
+            CONF_ACCESS_TOKEN: "google-access-token",
+            CONF_API_TOKEN: "robot-api-token",
+        },
+    ):
+        setup_result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_NAME: "garage_name",
+                CONF_EMAIL: "some.random@email.com",
+                CONF_PASSWORD: "none",
+            },
+        )
+        await hass.async_block_till_done()
+
+        assert setup_result["title"] == "some.random@email.com"
+
+        # Setup the User second Time
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_NAME: "garage_name",
+                CONF_EMAIL: "some.random@email.com",
+                CONF_PASSWORD: "none",
+            },
+        )
+        await hass.async_block_till_done()
+
+        assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result2["reason"] == "already_configured"
