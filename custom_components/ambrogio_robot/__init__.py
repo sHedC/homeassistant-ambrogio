@@ -34,12 +34,10 @@ PLATFORMS: list[Platform] = [
 ]
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
-    """Set up  ZCS Lawn Mower Robot component."""
-    hass.data.setdefault(DOMAIN, {})
-
-    await async_setup_services(hass)
-
+async def async_setup(
+    hass: HomeAssistant, config: dict  # pylint: disable=unused-argument
+) -> bool:
+    """Set up this integration using YAML is not supported."""
     return True
 
 
