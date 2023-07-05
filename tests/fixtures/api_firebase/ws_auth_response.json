@@ -1,0 +1,42 @@
+{
+    "t": "d",
+    "d": {
+        "r": 1,
+        "b": {
+            "s": "ok",
+            "d": {
+                "auth": {
+                    "name": "First Last",
+                    "email_verified": true,
+                    "provider": "password",
+                    "email": "user@email.com",
+                    "user_id": "userid_privatekey",
+                    "token": {
+                        "name": "First Last",
+                        "email_verified": true,
+                        "email": "user@email.com",
+                        "exp": 1684443734,
+                        "user_id": "userid_privatekey",
+                        "picture": "https://userpicture",
+                        "iat": 1684440134,
+                        "sub": "access-token",
+                        "aud": "centrosistemi-ambrogioremote",
+                        "auth_time": 1684440134,
+                        "iss": "https://securetoken.google.com/centrosistemi-ambrogioremote",
+                        "firebase": {
+                            "identities": {
+                                "email": [
+                                    "user@email.com"
+                                ]
+                            },
+                            "sign_in_provider": "password"
+                        }
+                    },
+                    "uid": "userid_privatekey",
+                    "picture": "https://userpicture"
+                },
+                "expires": 1684443734
+            }
+        }
+    }
+}

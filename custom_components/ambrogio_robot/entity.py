@@ -46,7 +46,7 @@ class AmbrogioRobotEntity(CoordinatorEntity):
 
         self._entity_type = entity_type
         self._entity_key = entity_key
-        self._attr_unique_id = slugify(f"{robot_name}_{entity_key}")
+        self._attr_unique_id = slugify(f"{robot_imei}_{entity_key}")
         self._additional_extra_state_attributes = {}
 
         self.entity_id = f"{entity_type}.{self._attr_unique_id}"

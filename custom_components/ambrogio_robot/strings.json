@@ -18,6 +18,9 @@
             "connection": "Unable to connect to the server.",
             "unknown": "Unknown error occurred.",
             "robot_not_found": "Robot Mower is not found or connected properly."
+        },
+        "abort": {
+            "already_configured": "Device is already configured"
         }
     },
     "options": {

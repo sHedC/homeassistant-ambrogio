@@ -1,0 +1,11 @@
+{
+    "kind": "identitytoolkit#VerifyPasswordResponse",
+    "localId": "robot-api-token",
+    "email": "user@email.com",
+    "displayName": "First Last",
+    "idToken": "google-access-token",
+    "registered": true,
+    "profilePicture": "https://profilepicture",
+    "refreshToken": "google-refresh-token-key",
+    "expiresIn": "3600"
+}
