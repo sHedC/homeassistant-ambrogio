@@ -4,21 +4,28 @@ import voluptuous as vol
 
 from homeassistant.const import (
     CONF_EMAIL,
-    CONF_PASSWORD,
-    CONF_NAME,
     CONF_ERROR,
+    CONF_PASSWORD,
 )
 from homeassistant.config_entries import (
     CONN_CLASS_CLOUD_POLL,
     ConfigFlow,
+    ConfigEntry,
     FlowResult,
+    OptionsFlow,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .api_firebase import AmbrogioRobotFirebaseAPI, AmbrogioRobotException
-from .const import DOMAIN
+from .const import (
+    DOMAIN,
+    UPDATE_INTERVAL_DEFAULT,
+    UPDATE_INTERVAL_WORKING,
+    CONF_SCAN_INTERVAL_DEFAULT,
+    CONF_SCAN_INTERVAL_WORKING,
+)
 
 _LOGGER: logging.Logger = logging.getLogger(__name__)
 
@@ -54,14 +61,6 @@ class AmbrogioFlowHandler(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(
-                        CONF_NAME,
-                        default=(user_input or {}).get(CONF_NAME),
-                    ): selector.TextSelector(
-                        selector.TextSelectorConfig(
-                            type=selector.TextSelectorType.TEXT
-                        ),
-                    ),
-                    vol.Required(
                         CONF_EMAIL,
                         default=(user_input or {}).get(CONF_EMAIL),
                     ): selector.TextSelector(
@@ -81,6 +80,62 @@ class AmbrogioFlowHandler(ConfigFlow, domain=DOMAIN):
             ),
             errors=_errors,
             last_step=True,
+        )
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+        """Return the option flow handler."""
+        return AmbrogioOptionsFlowHandler(config_entry)
+
+
+class AmbrogioOptionsFlowHandler(OptionsFlow):
+    """Ambrogio config options flow handler."""
+
+    def __init__(self, config_entry: ConfigEntry) -> None:
+        """Initialize HACS options flow."""
+        self.config_entry = config_entry
+        self.options = dict(config_entry.options)
+
+    async def async_step_init(
+        self,
+        user_input: dict[str, any] | None = None,  # pylint: disable=unused-argument
+    ) -> FlowResult:
+        """Manage the options."""
+        return await self.async_step_user()
+
+    async def async_step_user(
+        self, user_input: dict[str, any] | None = None
+    ) -> FlowResult:
+        """Handle a flow initialized by the user."""
+        if user_input is not None:
+            self.options.update(user_input)
+            return await self._update_options()
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_SCAN_INTERVAL_DEFAULT,
+                        default=self.options.get(
+                            CONF_SCAN_INTERVAL_DEFAULT, UPDATE_INTERVAL_DEFAULT
+                        ),
+                    ): vol.All(vol.Coerce(int), vol.Range(min=120, max=600)),
+                    vol.Required(
+                        CONF_SCAN_INTERVAL_WORKING,
+                        default=self.options.get(
+                            CONF_SCAN_INTERVAL_WORKING, UPDATE_INTERVAL_WORKING
+                        ),
+                    ): vol.All(vol.Coerce(int), vol.Range(min=10, max=120)),
+                }
+            ),
+        )
+
+    async def _update_options(self) -> FlowResult:
+        """Update config entry options."""
+        return self.async_create_entry(
+            title=self.config_entry.data.get(CONF_EMAIL), data=self.options
         )
 
 

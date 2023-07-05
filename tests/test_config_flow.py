@@ -9,7 +9,6 @@ from homeassistant.const import (
     CONF_API_TOKEN,
     CONF_EMAIL,
     CONF_PASSWORD,
-    CONF_NAME,
     CONF_ERROR,
 )
 
@@ -70,7 +69,6 @@ async def test_form_login_fail(hass: HomeAssistant):
         setup_result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_NAME: "garage_name",
                 CONF_EMAIL: "user@email.com",
                 CONF_PASSWORD: "none",
             },
@@ -100,7 +98,6 @@ async def test_form_login_setup(hass: HomeAssistant):
         setup_result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_NAME: "garage_name",
                 CONF_EMAIL: "some.random@email.com",
                 CONF_PASSWORD: "none",
             },
@@ -126,7 +123,6 @@ async def test_form_duplicate_check(hass: HomeAssistant):
         setup_result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_NAME: "garage_name",
                 CONF_EMAIL: "some.random@email.com",
                 CONF_PASSWORD: "none",
             },
@@ -142,7 +138,6 @@ async def test_form_duplicate_check(hass: HomeAssistant):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_NAME: "garage_name",
                 CONF_EMAIL: "some.random@email.com",
                 CONF_PASSWORD: "none",
             },

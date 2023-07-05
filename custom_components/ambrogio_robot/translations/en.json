@@ -5,7 +5,6 @@
                 "title": "Cloud Service Login",
                 "description": "Garage Name is the collective name for the robots under a single account, Access Token and IMEI can be found in the mobile app. For additional information go to https://github.com/sHedC/homeassistant-ambrogio. More mowers can be added after setup using the device Options.",
                 "data": {
-                    "name": "Garage Name",
                     "api_token": "API Token (This is the current known token)",
                     "access_token": "User Access Token",
                     "robot_name": "Robot Name, you know you have one",
@@ -61,6 +60,13 @@
                 "data": {
                     "selected_robot": "Select Robots to Delete",
                     "confirm": "Confirm deletion"
+                }
+            },
+            "user": {
+                "title": "Settings",
+                "data": {
+                    "scan_interval_default": "Data Update Seconds when Idle (min 30)",
+                    "scan_interval_working": "Data Update Seconds when Working (min 10)"
                 }
             }
         },

@@ -31,6 +31,8 @@ CONF_CONFIRM = "confirm"
 CONF_ROBOT_NAME = "robot_name"
 CONF_ROBOT_IMEI = "robot_imei"
 CONF_SELECTED_ROBOT = "selected_robot"
+CONF_SCAN_INTERVAL_DEFAULT = "scan_interval_default"
+CONF_SCAN_INTERVAL_WORKING = "scan_interval_working"
 
 ATTR_SERIAL = "serial"
 ATTR_WORKING = "working"

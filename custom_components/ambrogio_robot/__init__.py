@@ -5,7 +5,7 @@ https://github.com/sHedC/homeassistant-ambrogio
 """
 from __future__ import annotations
 
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Config, HomeAssistant
 from homeassistant.const import (
     CONF_API_TOKEN,
     CONF_ACCESS_TOKEN,
@@ -35,7 +35,7 @@ PLATFORMS: list[Platform] = [
 
 
 async def async_setup(
-    hass: HomeAssistant, config: dict  # pylint: disable=unused-argument
+    hass: HomeAssistant, config: Config  # pylint: disable=unused-argument
 ) -> bool:
     """Set up this integration using YAML is not supported."""
     return True
